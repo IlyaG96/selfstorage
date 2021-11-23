@@ -78,7 +78,7 @@ if __name__ == '__main__':
 
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
-        states={  # словарь состояний разговора, возвращаемых callback функциями
+        states={
             GET_ADDRESS: [
                 MessageHandler(Filters.regex('^Адрес [1|2|3|4]$'), get_address)
             ],
@@ -89,9 +89,6 @@ if __name__ == '__main__':
         },
         fallbacks=[CommandHandler('start', start)],
     )
-    # добавляем этот обработчик в `dispatcher`
     dispatcher.add_handler(conv_handler)
     updater.start_polling()
     updater.idle()
-
-
