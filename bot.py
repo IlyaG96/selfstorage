@@ -33,7 +33,7 @@ def start(update, _):
     return GET_ADDRESS
 
 
-def get_address(update, _):
+def get_agreement_accept(update, _):
     keyboard = [
         [
             KeyboardButton('Принимаю'),
@@ -89,7 +89,7 @@ if __name__ == '__main__':
         entry_points=[CommandHandler('start', start), MessageHandler(Filters.regex('^Начать$'), start)],
         states={
             GET_ADDRESS: [
-                MessageHandler(Filters.regex('^Адрес [1|2|3|4]$'), get_address)
+                MessageHandler(Filters.regex('^Адрес [1|2|3|4]$'), get_agreement_accept)
             ],
             GET_ACCEPT: [
                 MessageHandler(Filters.regex('^Принимаю$'), accept_success),
