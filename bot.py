@@ -53,9 +53,18 @@ def get_address(update, _):
 
 
 def accept_failure(update, _):
+    keyboard = [
+        [
+            KeyboardButton('Начать')
+        ]
+    ]
+
+    reply_markup = ReplyKeyboardMarkup(keyboard)
+
     update.message.reply_text(
-        'Жаль, что вы отказались. В таком случае, на этом моя работа закончена',
-        reply_markup=ReplyKeyboardRemove()
+        'Жаль, что вы отказались. Мы не можем забронировать вам место без согласия на обработку персональных данных. '
+        'Нажмите "Начать", если вы захотите снова воспользоваться ботом.',
+        reply_markup=reply_markup
     )
 
     return ConversationHandler.END
@@ -77,7 +86,7 @@ if __name__ == '__main__':
     dispatcher = updater.dispatcher
 
     conv_handler = ConversationHandler(
-        entry_points=[CommandHandler('start', start)],
+        entry_points=[CommandHandler('start', start), MessageHandler(Filters.regex('^Начать$'), start)],
         states={
             GET_ADDRESS: [
                 MessageHandler(Filters.regex('^Адрес [1|2|3|4]$'), get_address)
@@ -85,9 +94,9 @@ if __name__ == '__main__':
             GET_ACCEPT: [
                 MessageHandler(Filters.regex('^Принимаю$'), accept_success),
                 MessageHandler(Filters.regex('^Отказываюсь$'), accept_failure),
-            ]
+            ],
         },
-        fallbacks=[CommandHandler('start', start)],
+        fallbacks=[CommandHandler('start', start), MessageHandler(Filters.regex('^Начать$'), start)],
     )
     dispatcher.add_handler(conv_handler)
     updater.start_polling()
