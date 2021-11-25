@@ -4,7 +4,7 @@ from telegram.ext import Updater, CommandHandler, ConversationHandler, MessageHa
 from environs import Env
 
 
-GET_ADDRESS, GET_ACCEPT, GET_THINGS_TYPE, GET_OTHER_THINGS_AREA, GET_OTHER_THINGS_TIME = range(6)
+GET_ADDRESS, GET_ACCEPT, GET_THINGS_TYPE, GET_OTHER_THINGS_AREA, GET_THINGS_CONFIRMATION = range(5)
 
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -33,7 +33,9 @@ def start(update, _):
     return GET_ADDRESS
 
 
-def get_things_type(update, _):
+def get_things_type(update, context):
+    context.user_data['warehouse_short_name'] = update.message.text
+
     keyboard = [
         [
             KeyboardButton('Сезонные вещи'),
@@ -51,7 +53,9 @@ def get_things_type(update, _):
     return GET_THINGS_TYPE
 
 
-def get_other_things_area(update, _):
+def get_other_things_area(update, context):
+    context.user_data['supertype'] = update.message.text
+
     # replace with get from db
     start_price = 599
     add_price = 150
@@ -70,7 +74,9 @@ def get_other_things_area(update, _):
     return GET_OTHER_THINGS_AREA
 
 
-def get_other_things_time(update, _):
+def get_other_things_time(update, context):
+    context.user_data['other_area'] = update.message.text
+
     time_buttons = [
         [KeyboardButton(f'На {time} месяцев')] for time in range(1, 13)
     ]
@@ -82,7 +88,21 @@ def get_other_things_time(update, _):
         reply_markup=reply_markup
     )
 
-    return GET_OTHER_THINGS_TIME
+    return GET_THINGS_CONFIRMATION
+
+
+def get_things_confirmation(update, context):
+    user_data = context.user_data
+
+    if user_data['supertype'] == 'Другое':
+        user_data['other_time'] = update.message.text
+
+        update.message.reply_text(
+            f'Ваш заказ: \n'
+            f'Тип: {user_data["supertype"]}\n'
+            f'Площадь: {user_data["other_area"]}\n'
+            f'Время хранения: {user_data["other_time"]}\n'
+        )
 
 
 def get_agreement_accept(update, _):
@@ -148,6 +168,9 @@ if __name__ == '__main__':
             ],
             GET_OTHER_THINGS_AREA: [
                 MessageHandler(Filters.regex(r'^\d{1,2} кв\.м за \d{3,4} рублей в месяц$'), get_other_things_time)
+            ],
+            GET_THINGS_CONFIRMATION: [
+                MessageHandler(Filters.text, get_things_confirmation)
             ],
             GET_ACCEPT: [
                 MessageHandler(Filters.regex('^Принимаю$'), accept_success),
