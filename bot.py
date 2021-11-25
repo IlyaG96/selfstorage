@@ -192,7 +192,8 @@ def get_things_confirmation(update, context):
             f'Ваш заказ: \n'
             f'Тип: {user_data["seasoned_type"]}\n'
             f'Количество: {user_data["seasoned_count"]}\n'
-            f'Время хранения: {user_data["seasoned_time"]}'
+            f'Время хранения: {user_data["seasoned_time"]}',
+            reply_markup=reply_markup
         )
 
     return GET_PERSONAL_DATA
