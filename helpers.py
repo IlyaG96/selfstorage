@@ -1,10 +1,22 @@
+import random
 import sqlite3
+import string
 from datetime import datetime
 from pathlib import Path
 from sqlite3 import Error
 
+import qrcode
+
 
 selfstorage = 'selfstorage.db'
+
+
+def get_code(context_data):
+    key = ''.join(random.choices(string.ascii_letters + string.digits, k = 32))
+    img = qrcode.make(key)
+    code_file = 'SelfStorage code.png'
+    img.save(code_file)
+    return code_file
 
 
 def create_connection(db_file):
@@ -88,13 +100,15 @@ def create_db():
 
 
 def add_user(context_data):
+    if not Path(selfstorage).is_file():
+        create_db()
     birthdate_str = context_data['birthdate']
     birthdate = datetime.strptime(f'{birthdate_str}', '%d.%m.%Y')
     user = (
         context_data['user_id'],
         context_data['first_name'],
         context_data['patronymic'],
-        context_data['second_name'],
+        context_data['last_name'],
         context_data['phone'],
         context_data['passport'],
         birthdate,
