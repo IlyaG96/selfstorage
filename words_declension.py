@@ -34,5 +34,5 @@ def num_with_ruble(num):
             return f'{num} рубль'
         if 1 < end_num < 5:
             return f'{num} рубля'
-        if 4 < num < 10:
+        if 4 < end_num < 10:
             return f'{num} рублей'
