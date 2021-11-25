@@ -4,7 +4,7 @@ from telegram.ext import Updater, CommandHandler, ConversationHandler, MessageHa
 from environs import Env
 
 
-GET_ADDRESS, GET_ACCEPT = range(2)
+GET_ADDRESS, GET_ACCEPT, GET_THINGS_TYPE, GET_OTHER_THINGS_AREA, GET_OTHER_THINGS_TIME = range(6)
 
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -31,6 +31,58 @@ def start(update, _):
     )
 
     return GET_ADDRESS
+
+
+def get_things_type(update, _):
+    keyboard = [
+        [
+            KeyboardButton('Сезонные вещи'),
+            KeyboardButton('Другое')
+        ]
+    ]
+
+    reply_markup = ReplyKeyboardMarkup(keyboard)
+
+    update.message.reply_text(
+        'Теперь выберите, пожалуйста, тип вещей для хранения',
+        reply_markup=reply_markup
+    )
+
+    return GET_THINGS_TYPE
+
+
+def get_other_things_area(update, _):
+    # replace with get from db
+    start_price = 599
+    add_price = 150
+
+    things_areas_buttons = [
+        [KeyboardButton(f'{area + 1} кв.м за {start_price + add_price * area} рублей в месяц')] for area in range(0, 10)
+    ]
+
+    reply_markup = ReplyKeyboardMarkup(things_areas_buttons)
+
+    update.message.reply_text(
+        'Выберите площадь необходимую для хранения ваших вещей',
+        reply_markup=reply_markup
+    )
+
+    return GET_OTHER_THINGS_AREA
+
+
+def get_other_things_time(update, _):
+    time_buttons = [
+        [KeyboardButton(f'На {time} месяцев')] for time in range(1, 13)
+    ]
+
+    reply_markup = ReplyKeyboardMarkup(time_buttons)
+
+    update.message.reply_text(
+        'Выберите на какой срок вы хотите снять ячейку хранения',
+        reply_markup=reply_markup
+    )
+
+    return GET_OTHER_THINGS_TIME
 
 
 def get_agreement_accept(update, _):
@@ -89,7 +141,13 @@ if __name__ == '__main__':
         entry_points=[CommandHandler('start', start), MessageHandler(Filters.regex('^Начать$'), start)],
         states={
             GET_ADDRESS: [
-                MessageHandler(Filters.regex('^Адрес [1|2|3|4]$'), get_agreement_accept)
+                MessageHandler(Filters.regex('^Адрес [1|2|3|4]$'), get_things_type)
+            ],
+            GET_THINGS_TYPE: [
+                MessageHandler(Filters.regex('^Другое$'), get_other_things_area)
+            ],
+            GET_OTHER_THINGS_AREA: [
+                MessageHandler(Filters.regex(r'^\d{1,2} кв\.м за \d{3,4} рублей в месяц$'), get_other_things_time)
             ],
             GET_ACCEPT: [
                 MessageHandler(Filters.regex('^Принимаю$'), accept_success),
