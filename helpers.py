@@ -75,8 +75,9 @@ def create_db():
 
     sql_create_prices_table = """CREATE TABLE IF NOT EXISTS prices (
                                            type text PRIMARY KEY,
-                                           period text,
-                                           cost integer,
+                                           category text,
+                                           cost_per_week integer,
+                                           cost_per_month integer,
                                            sub_cost integer
                                        );"""
 
@@ -102,6 +103,7 @@ def create_db():
 def add_user(context_data):
     if not Path(selfstorage).is_file():
         create_db()
+        add_prices()
     birthdate_str = context_data['birthdate']
     birthdate = datetime.strptime(f'{birthdate_str}', '%d.%m.%Y')
     user = (
@@ -130,3 +132,42 @@ def get_user(user_id):
         cur = conn.cursor()
         cur.execute("SELECT * FROM users WHERE id=?", (user_id,))
         return cur.fetchone()
+
+
+def add_prices():
+    conn = create_connection(selfstorage)
+    sql = ''' INSERT INTO prices(type, category, cost_per_week, cost_per_month, sub_cost)
+              VALUES(?,?,?,?,?) '''
+    cur = conn.cursor()
+
+    cur.execute(sql, ('Лыжи', 'seasoned_type', 100, 300, None))
+    cur.execute(sql, ('Сноуборд', 'seasoned_type', 100, 300, None))
+    cur.execute(sql, ('Колеса', 'seasoned_type', None, 50, None))
+    cur.execute(sql, ('Велосипед', 'seasoned_type', 150, 400, None))
+    cur.execute(sql, ('Площадь', 'supertype', None, 599, 150))
+    
+    conn.commit()
+
+
+def get_seasoned_prices():
+    conn = create_connection(selfstorage)
+    cur = conn.cursor()
+    cur.execute("SELECT type, cost_per_week, cost_per_month FROM prices WHERE category=?", ('seasoned_type',))
+    rows = cur.fetchall()
+
+    things_price = dict()
+    for row in rows:
+        things_price[row[0]] = (row[1], row[2])
+
+    return things_price
+
+
+def get_other_prices():
+    conn = create_connection(selfstorage)
+    cur = conn.cursor()
+    cur.execute("SELECT cost_per_month, sub_cost FROM prices WHERE category=?", ('supertype',))
+    row = cur.fetchone()
+    
+    price = (row[0], row[1])
+
+    return price
