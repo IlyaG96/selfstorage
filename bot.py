@@ -2,6 +2,7 @@ import logging
 from telegram import KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import Updater, CommandHandler, ConversationHandler, MessageHandler, Filters
 from environs import Env
+from words_declension import num_with_week, num_with_month, num_with_ruble
 
 
 GET_ADDRESS, GET_ACCEPT, GET_THINGS_TYPE, GET_OTHER_THINGS_AREA, GET_THINGS_CONFIRMATION, GET_PERSONAL_DATA = range(6)
@@ -62,7 +63,8 @@ def get_other_things_area(update, context):
     add_price = 150
 
     things_areas_buttons = [
-        [KeyboardButton(f'{area + 1} кв.м за {start_price + add_price * area} рублей в месяц')] for area in range(0, 10)
+        [KeyboardButton(f'{area + 1} кв.м за {num_with_ruble(start_price + add_price * area)} в месяц')]
+        for area in range(0, 10)
     ]
 
     reply_markup = ReplyKeyboardMarkup(things_areas_buttons)
@@ -79,7 +81,7 @@ def get_other_things_time(update, context):
     context.user_data['other_area'] = update.message.text
 
     time_buttons = [
-        [KeyboardButton(f'На {time} месяцев')] for time in range(1, 13)
+        [KeyboardButton(f'На {num_with_month(time)}')] for time in range(1, 13)
     ]
 
     reply_markup = ReplyKeyboardMarkup(time_buttons)
@@ -142,12 +144,12 @@ def get_seasoned_things_time(update, context):
     price = things_price.get(thing)
     week_price, month_price = price
     if week_price:
-        result += f'{week_price * count} рублей в неделю или '
-    result += f'{month_price * count} рублей в месяц'
+        result += f'{num_with_ruble(week_price * count)} в неделю или '
+    result += f'{num_with_ruble(month_price * count)} в месяц'
 
     time_buttons = (
-        ([[KeyboardButton(f'{time} недели')] for time in range(1, 4)] if week_price else [])
-        + [[KeyboardButton(f'{time} месяцев')] for time in range(1, 7)]
+        ([[KeyboardButton(num_with_week(time))] for time in range(1, 4)] if week_price else [])
+        + [[KeyboardButton(num_with_month(time))] for time in range(1, 7)]
     )
 
     reply_markup = ReplyKeyboardMarkup(time_buttons)
@@ -260,7 +262,7 @@ if __name__ == '__main__':
             ],
             # ветка других вещей
             GET_OTHER_THINGS_AREA: [
-                MessageHandler(Filters.regex(r'^\d{1,2} кв\.м за \d{3,4} рублей в месяц$'), get_other_things_time)
+                MessageHandler(Filters.text, get_other_things_time)
             ],
             # ветка сезонных вещей
             GET_SEASONED_THINGS_TYPE: [
