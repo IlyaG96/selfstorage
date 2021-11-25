@@ -4,7 +4,7 @@ from telegram.ext import Updater, CommandHandler, ConversationHandler, MessageHa
 from environs import Env
 
 
-GET_ADDRESS, GET_ACCEPT, GET_THINGS_TYPE, GET_OTHER_THINGS_AREA, GET_THINGS_CONFIRMATION = range(5)
+GET_ADDRESS, GET_ACCEPT, GET_THINGS_TYPE, GET_OTHER_THINGS_AREA, GET_THINGS_CONFIRMATION, GET_PERSONAL_DATA = range(6)
 
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -92,6 +92,12 @@ def get_other_things_time(update, context):
 
 
 def get_things_confirmation(update, context):
+    keyboard = [
+        ['Подтвердить']
+    ]
+
+    reply_markup = ReplyKeyboardMarkup(keyboard)
+
     user_data = context.user_data
 
     if user_data['supertype'] == 'Другое':
@@ -101,8 +107,11 @@ def get_things_confirmation(update, context):
             f'Ваш заказ: \n'
             f'Тип: {user_data["supertype"]}\n'
             f'Площадь: {user_data["other_area"]}\n'
-            f'Время хранения: {user_data["other_time"]}\n'
+            f'Время хранения: {user_data["other_time"]}\n',
+            reply_markup=reply_markup
         )
+
+    return GET_PERSONAL_DATA
 
 
 def get_agreement_accept(update, _):
