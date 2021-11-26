@@ -32,14 +32,17 @@ def start(update, context):
             )
         )
         return GET_USER_CHOICE
-    else:    
+    else:
+        # replace with get from db
+        addresses = [
+            'Рязанский пр., 16 строение 4',
+            'ул. Наташи Ковшовой, 2',
+            'Люблинская ул., 60 корпус 2',
+            'Походный пр-д, 6'
+        ]
+
         keyboard = [
-            [
-                KeyboardButton('Адрес 1'),
-                KeyboardButton('Адрес 2'),
-                KeyboardButton('Адрес 3'),
-                KeyboardButton('Адрес 4')
-            ]
+            [KeyboardButton(addresses[num]), KeyboardButton(addresses[num+1])] for num in range(0, len(addresses), 2)
         ]
     
         reply_markup = ReplyKeyboardMarkup(keyboard)
@@ -55,7 +58,7 @@ def start(update, context):
 
 def get_things_type(update, context):
     if update.message.text != 'Назад ⬅':
-        context.user_data['warehouse_id'] = update.message.text[-1]
+        context.user_data['warehouse_address'] = update.message.text
 
     keyboard = [
         [
