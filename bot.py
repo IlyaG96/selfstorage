@@ -6,7 +6,7 @@ from telegram import KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import Updater, CommandHandler, ConversationHandler, MessageHandler, Filters, PreCheckoutQueryHandler
 from environs import Env
 from words_declension import num_with_week, num_with_month, num_with_ruble
-from helpers import add_user, get_user, get_code, create_db, selfstorage, add_prices
+from helpers import add_user, get_user, get_code, create_db, selfstorage, add_prices, add_reservation, get_reservations, check_age
 from payments import take_payment, count_price, precheckout, PRECHECKOUT, SUCCESS_PAYMENT, TAKE_PAYMENT
 
 
@@ -285,7 +285,7 @@ def get_things_confirmation(update, context):
             f'Тип: {user_data["supertype"]}\n'
             f'Площадь: {user_data["other_area"]} м²\n'
             f'Время хранения: {num_with_month(user_data["other_time"])}\n'
-            f'Итоговая цена: {num_with_ruble(count_price(update, context))}',
+            f'Итоговая цена: {count_price(update, context)}',
             reply_markup=reply_markup
         )
     elif user_data['supertype'] == 'Сезонные вещи':
@@ -332,19 +332,19 @@ def get_agreement_accept(update, _):
 def accept_failure(update, _):
     keyboard = [
         [
-            KeyboardButton('Начать')
+            KeyboardButton('Принимаю'),
+            KeyboardButton('Отказываюсь')
         ]
     ]
 
     reply_markup = ReplyKeyboardMarkup(keyboard)
 
     update.message.reply_text(
-        'Жаль, что вы отказались. Мы не можем забронировать вам место без согласия на обработку персональных данных. '
-        'Нажмите "Начать", если вы захотите снова воспользоваться ботом.',
+        'К сожалению, без согласия на обработку данных вы не сможете забронировать у нас место',
         reply_markup=reply_markup
     )
 
-    return ConversationHandler.END
+    return GET_ACCEPT
 
 
 def name_from_contact(update, _):
@@ -444,21 +444,26 @@ def birthdate(update, context):
 
 
 def correct_birthdate(update, context):
-    context.user_data['birthdate'] = update.message.text
-
-    if not get_user(update.message.from_user.id):
-        add_user(context.user_data)
-
-    total_price = count_price(update, context)
-
-    update.message.reply_text(
-        f'Стоимость бронирования: {total_price} руб.',
-        reply_markup=ReplyKeyboardMarkup(
-            [['Оплатить']],
-            resize_keyboard=True,
-        ),
-    )
-    return TAKE_PAYMENT
+    check_birthdate = check_age(update.message.text)
+    if not check_birthdate:
+        context.user_data['birthdate'] = update.message.text
+    
+        if not get_user(update.message.from_user.id):
+            add_user(context.user_data)
+    
+        total_price = count_price(update, context)
+    
+        update.message.reply_text(
+            f'Стоимость бронирования: {total_price} руб.',
+            reply_markup=ReplyKeyboardMarkup(
+                [['Оплатить']],
+                resize_keyboard=True,
+            ),
+        )
+        return TAKE_PAYMENT
+    else:
+        update.message.reply_text(check_birthdate)
+        return ConversationHandler.END
 
 
 def incorrect_birthdate(update, _):
@@ -469,6 +474,7 @@ def incorrect_birthdate(update, _):
 
 
 def success_payment(update, context):
+    add_reservation(context.user_data)
     update.message.reply_text(
         'Будем считать, что оплата прошла )\n'
         'Ваш код для доступа в хранилище:',
@@ -477,6 +483,22 @@ def success_payment(update, context):
     code_path = get_code(context.user_data)
     with open(code_path, 'rb') as code:
         update.message.reply_photo(code)
+
+
+def show_things(update, context):
+    things = get_reservations(context.user_data['user_id'])
+
+    if things:
+        update.message.reply_text('Вещи на хранении:')
+        update.message.reply_text(
+                things[0],
+                reply_markup=ReplyKeyboardRemove(),
+            )
+    else:
+        update.message.reply_text(
+            'У вас нет вещей на хранении',
+            reply_markup=ReplyKeyboardRemove(),
+        )
 
 
 def tmp_reply(update, _):
@@ -596,7 +618,8 @@ if __name__ == '__main__':
                 MessageHandler(Filters.successful_payment, success_payment)
             ],
             GET_USER_CHOICE: [
-                MessageHandler(Filters.regex('^Забронировать место|Вещи на хранении$'), tmp_reply),
+                MessageHandler(Filters.regex('^Вещи на хранении$'), show_things),
+                MessageHandler(Filters.regex('^Забронировать место$'), tmp_reply),
             ],
         },
         fallbacks=[CommandHandler('start', start), MessageHandler(Filters.regex('^Начать$'), start)],
