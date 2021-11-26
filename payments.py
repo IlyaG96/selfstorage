@@ -39,6 +39,7 @@ def precheckout(update, _):
 
     return SUCCESS_PAYMENT
 
+
 def count_price(update, context):
 
     user_data = context.user_data

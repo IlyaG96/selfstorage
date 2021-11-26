@@ -67,7 +67,7 @@ def get_things_type(update, context):
         ]
 
         if update.message.text in addresses:
-            context.user_data['warehouse_address'] = update.message.text
+            context.user_data['warehouse_id'] = update.message.text
         else:
             return GET_ADDRESS
 
