@@ -170,7 +170,8 @@ def get_seasoned_things_time(update, context):
     user_data = context.user_data
     if update.message.text != 'Назад ⬅':
         user_data['seasoned_count'] = int(update.message.text)
-        count = user_data['seasoned_count']
+
+    count = user_data['seasoned_count']
 
     # Replace with get from db
     things_price = {
