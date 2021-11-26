@@ -1,7 +1,7 @@
 import random
 import sqlite3
 import string
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlite3 import Error
 
 import qrcode
@@ -122,6 +122,66 @@ def add_user(context_data):
     conn.commit()
 
 
+def add_reservation(context_data):
+    conn = create_connection(selfstorage)
+    cur = conn.cursor()
+    cur.execute("SELECT id FROM reservations")
+    reservation_ids = cur.fetchall()
+    if reservation_ids:
+        reservation_id = max(reservation_ids) + 1
+    else:
+        reservation_id = 1
+    reservation_start = datetime.today()
+
+    if context_data['supertype'] == 'Сезонные вещи':
+        thing_type = context_data['seasoned_type']
+        count = context_data['seasoned_count']
+        if context_data['seasoned_time_type'] == 'week':
+            period_in_weeks = context_data['seasoned_time']
+        else:
+            period_in_weeks = context_data['seasoned_time'] * 4
+        reservation_end = reservation_start + timedelta(weeks=period_in_weeks)
+    elif context_data['supertype'] == 'Другое':
+        thing_type = 'Площадь'
+        count = context_data['other_area']
+        period_in_weeks = context_data['other_time'] * 4
+        reservation_end = reservation_start + timedelta(weeks=period_in_weeks)
+
+    cost = None
+
+    reservation = (
+        reservation_id,
+        context_data['user_id'],
+        thing_type,
+        count,
+        reservation_start,
+        reservation_end,
+        cost
+    )
+
+    conn = create_connection(selfstorage)
+    sql = ''' INSERT INTO reservations(id, user_id, type, count, \
+                  reservation_start, reservation_end, cost)
+              VALUES(?,?,?,?,?,?,?) '''
+    cur = conn.cursor()
+    cur.execute(sql, reservation)
+    conn.commit()
+
+
+def get_reservations(user_id):
+    conn = create_connection(selfstorage)
+    cur = conn.cursor()
+    cur.execute("SELECT type, count, reservation_end FROM reservations WHERE user_id=?", (user_id,))
+    rows = cur.fetchall()
+    reply = []
+    for row in rows:
+        if datetime.fromisoformat(row[2]) > datetime.today():
+            time_dt = datetime.fromisoformat(row[2])
+            time_out = time_dt.strftime("%d.%m.%Y")
+            reply.append(f'Тип: {row[0]}, количество: {row[1]}\nПериод хранения: до {time_out}')
+    return reply
+
+
 def get_user(user_id):
     conn = create_connection(selfstorage)
     cur = conn.cursor()
@@ -166,3 +226,14 @@ def get_other_prices():
     price = (row[0], row[1])
 
     return price
+
+
+def check_age(birthdate):
+    birthdate_dt = datetime.strptime(f'{birthdate}', '%d.%m.%Y')
+    age = (datetime.today() - birthdate_dt) // timedelta(days=365.2425)
+    if age < 14:
+        return 'Вы слишком молоды, чтобы бронировать у нас место'
+    elif age > 100:
+        return 'Вы уже не в том возрасте, чтобы бронировать у нас место'
+    else:
+        return ''
