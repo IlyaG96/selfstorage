@@ -1,4 +1,5 @@
 import logging
+import re
 from telegram import KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import Updater, CommandHandler, ConversationHandler, MessageHandler, Filters
 from environs import Env
@@ -94,7 +95,9 @@ def get_other_things_area(update, context):
 
 
 def get_other_things_time(update, context):
-    context.user_data['other_area'] = update.message.text
+    area = re.match(r'^(\d{1,2}) кв\.м за \d{3,4} рубл(я|ей|ь) в месяц$', update.message.text).groups()[0]
+
+    context.user_data['other_area'] = int(area)
 
     time_buttons = [
         [KeyboardButton(f'На {num_with_month(time)}')] for time in range(1, 13)
@@ -133,7 +136,15 @@ def get_seasoned_things_type(update, context):
 
 
 def get_seasoned_things_count(update, context):
-    context.user_data['seasoned_type'] = update.message.text
+    # Replace with get from db
+    things_types = [
+        'Лыжи', 'Сноуборд', 'Велосипед', 'Колеса'
+    ]
+
+    if update.message.text in things_types:
+        context.user_data['seasoned_type'] = update.message.text
+    else:
+        return GET_SEASONED_THINGS_TYPE
 
     update.message.reply_text(
         'Напишите количество вещей',
@@ -164,8 +175,8 @@ def get_seasoned_things_time(update, context):
     result += f'{num_with_ruble(month_price * count)} в месяц'
 
     time_buttons = (
-        ([[KeyboardButton(num_with_week(time))] for time in range(1, 4)] if week_price else [])
-        + [[KeyboardButton(num_with_month(time))] for time in range(1, 7)]
+        ([[KeyboardButton(f'На {num_with_week(time)}')] for time in range(1, 4)] if week_price else [])
+        + [[KeyboardButton(f'На {num_with_month(time)}')] for time in range(1, 7)]
     )
 
     reply_markup = ReplyKeyboardMarkup(time_buttons)
@@ -192,23 +203,34 @@ def get_things_confirmation(update, context):
     user_data = context.user_data
 
     if user_data['supertype'] == 'Другое':
-        user_data['other_time'] = update.message.text
+        time = re.match(r'^На (\d{1,2}) месяц(ев|а|)$', update.message.text).groups()[0]
+        user_data['other_time'] = int(time)
 
         update.message.reply_text(
             f'Ваш заказ: \n'
             f'Тип: {user_data["supertype"]}\n'
             f'Площадь: {user_data["other_area"]}\n'
-            f'Время хранения: {user_data["other_time"]}\n',
+            f'Время хранения: {user_data["other_time"]}\n'
+            f'Итоговая цена: N',
             reply_markup=reply_markup
         )
     elif user_data['supertype'] == 'Сезонные вещи':
-        user_data['seasoned_time'] = update.message.text
+        if 'месяц' in update.message.text:
+            time = int(re.match(r'^На (\d{1,2}) месяц(ев|а|)$', update.message.text).groups()[0])
+            time_type = 'month'
+        elif 'недел' in update.message.text:
+            time = int(re.match(r'^На (\d) недел(я|и)$', update.message.text).groups()[0])
+            time_type = 'week'
+
+        user_data['seasoned_time'] = time
+        user_data['seasoned_time_type'] = time_type
 
         update.message.reply_text(
             f'Ваш заказ: \n'
             f'Тип: {user_data["seasoned_type"]}\n'
             f'Количество: {user_data["seasoned_count"]}\n'
-            f'Время хранения: {user_data["seasoned_time"]}',
+            f'Время хранения: {num_with_week(time) if time_type == "week" else num_with_month(time)}\n'
+            f'Итоговая цена: N',
             reply_markup=reply_markup
         )
 
@@ -408,7 +430,7 @@ if __name__ == '__main__':
             ],
             # ветка других вещей
             GET_OTHER_THINGS_AREA: [
-                MessageHandler(Filters.text, get_other_things_time)
+                MessageHandler(Filters.regex(r'^\d{1,2} кв\.м за \d{3,4} рубл(я|ей|ь) в месяц$'), get_other_things_time)
             ],
             # ветка сезонных вещей
             GET_SEASONED_THINGS_TYPE: [
@@ -418,7 +440,8 @@ if __name__ == '__main__':
                 MessageHandler(Filters.regex(r'^\d+$'), get_seasoned_things_time)
             ],
             GET_THINGS_CONFIRMATION: [
-                MessageHandler(Filters.text, get_things_confirmation)
+                MessageHandler(Filters.regex(r'^На \d{1,2} месяц(ев|а|)$'), get_things_confirmation),
+                MessageHandler(Filters.regex(r'^На \d недел(я|и)$'), get_things_confirmation)
             ],
             GET_ACCEPT: [
                 MessageHandler(Filters.regex('^Принимаю$'), name_from_contact),
