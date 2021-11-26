@@ -1,10 +1,12 @@
 import logging
 import re
+from pathlib import Path
+
 from telegram import KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import Updater, CommandHandler, ConversationHandler, MessageHandler, Filters, PreCheckoutQueryHandler
 from environs import Env
 from words_declension import num_with_week, num_with_month, num_with_ruble
-from helpers import add_user, get_user, get_code
+from helpers import add_user, get_user, get_code, create_db, selfstorage, add_prices
 from payments import take_payment, count_price, precheckout, PRECHECKOUT, SUCCESS_PAYMENT, TAKE_PAYMENT
 
 
@@ -283,7 +285,7 @@ def get_things_confirmation(update, context):
             f'Тип: {user_data["supertype"]}\n'
             f'Площадь: {user_data["other_area"]} м²\n'
             f'Время хранения: {num_with_month(user_data["other_time"])}\n'
-            f'Итоговая цена: N',
+            f'Итоговая цена: {count_price(update, context)}',
             reply_markup=reply_markup
         )
     elif user_data['supertype'] == 'Сезонные вещи':
@@ -300,7 +302,7 @@ def get_things_confirmation(update, context):
             f'Тип: {user_data["seasoned_type"]}\n'
             f'Количество: {user_data["seasoned_count"]}\n'
             f'Время хранения: {num_with_week(time) if time_type == "week" else num_with_month(time)}\n'
-            f'Итоговая цена: N',
+            f'Итоговая цена: {num_with_ruble(count_price(update, context))}',
             reply_markup=reply_markup
         )
 
@@ -503,6 +505,9 @@ if __name__ == '__main__':
     BOT_TOKEN = env('BOT_TOKEN')
     updater = Updater(token=BOT_TOKEN)
     dispatcher = updater.dispatcher
+    if not Path(selfstorage).is_file():
+        create_db()
+        add_prices()
 
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start), MessageHandler(Filters.regex('^Начать$'), start)],

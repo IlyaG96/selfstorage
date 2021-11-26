@@ -2,7 +2,6 @@ import random
 import sqlite3
 import string
 from datetime import datetime
-from pathlib import Path
 from sqlite3 import Error
 
 import qrcode
@@ -101,9 +100,6 @@ def create_db():
 
 
 def add_user(context_data):
-    if not Path(selfstorage).is_file():
-        create_db()
-        add_prices()
     birthdate_str = context_data['birthdate']
     birthdate = datetime.strptime(f'{birthdate_str}', '%d.%m.%Y')
     user = (
@@ -127,11 +123,10 @@ def add_user(context_data):
 
 
 def get_user(user_id):
-    if Path(selfstorage).is_file():
-        conn = create_connection(selfstorage)
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM users WHERE id=?", (user_id,))
-        return cur.fetchone()
+    conn = create_connection(selfstorage)
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM users WHERE id=?", (user_id,))
+    return cur.fetchone()
 
 
 def add_prices():
