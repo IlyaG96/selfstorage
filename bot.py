@@ -285,7 +285,7 @@ def get_things_confirmation(update, context):
             f'Тип: {user_data["supertype"]}\n'
             f'Площадь: {user_data["other_area"]} м²\n'
             f'Время хранения: {num_with_month(user_data["other_time"])}\n'
-            f'Итоговая цена: {count_price(update, context)}',
+            f'Итоговая цена: {num_with_ruble(count_price(update, context))}',
             reply_markup=reply_markup
         )
     elif user_data['supertype'] == 'Сезонные вещи':
