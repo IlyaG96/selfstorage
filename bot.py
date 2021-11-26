@@ -9,9 +9,9 @@ from payments import take_payment, count_price, precheckout, PRECHECKOUT, SUCCES
 
 
 GET_ADDRESS, GET_ACCEPT, GET_THINGS_TYPE, GET_OTHER_THINGS_AREA, GET_THINGS_CONFIRMATION, GET_PERSONAL_DATA = range(6)
-GET_SEASONED_THINGS_TYPE, GET_SEASONED_THINGS_COUNT = range(6, 8)
-GET_NAME_INPUT_CHOICE, GET_PATRONYMIC, GET_FULL_NAME = range(8,11)
-GET_PHONE, GET_PASSPORT, GET_BIRTHDATE, GET_PAYMENT_ACCEPT, GET_USER_CHOICE = range(11,16)
+GET_SEASONED_THINGS_TYPE, GET_SEASONED_THINGS_COUNT, GET_SEASONED_THINGS_TIME_TYPE = range(6, 9)
+GET_NAME_INPUT_CHOICE, GET_PATRONYMIC, GET_FULL_NAME = range(9, 12)
+GET_PHONE, GET_PASSPORT, GET_BIRTHDATE, GET_PAYMENT_ACCEPT, GET_USER_CHOICE = range(12, 17)
 
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -74,7 +74,9 @@ def get_things_type(update, context):
     keyboard = [
         [
             KeyboardButton('Сезонные вещи'),
-            KeyboardButton('Другое'),
+            KeyboardButton('Другое')
+        ],
+        [
             KeyboardButton('Назад ⬅')
         ]
     ]
@@ -98,11 +100,17 @@ def get_other_things_area(update, context):
     add_price = 150
 
     things_areas_buttons = [
-        [KeyboardButton(f'{area + 1} кв.м за {num_with_ruble(start_price + add_price * area)} в месяц')]
-        for area in range(0, 10)
+        [
+            KeyboardButton(f'{area + 1} м² за {start_price + add_price * area} руб./мес.'),
+            KeyboardButton(f'{area + 2} м² за {start_price + add_price * (area + 1)} руб./мес.'),
+            KeyboardButton(f'{area + 3} м² за {start_price + add_price * (area + 2)} руб./мес.')
+        ] if area < 9
+        else [
+            KeyboardButton(f'{area + 1} м² за {start_price + add_price * area} руб./мес.'),
+            KeyboardButton('Назад ⬅')
+        ]
+        for area in range(0, 10, 3)
     ]
-
-    things_areas_buttons.append([KeyboardButton('Назад ⬅')])
 
     reply_markup = ReplyKeyboardMarkup(things_areas_buttons)
 
@@ -116,12 +124,15 @@ def get_other_things_area(update, context):
 
 def get_other_things_time(update, context):
     if update.message.text != 'Назад ⬅':
-        area = re.match(r'^(\d{1,2}) кв\.м за \d{3,4} рубл(я|ей|ь) в месяц$', update.message.text).groups()[0]
+        area = re.match(r'^(\d{1,2}) м² за \d{3,4} руб./мес.$', update.message.text).groups()[0]
 
         context.user_data['other_area'] = int(area)
 
     time_buttons = [
-        [KeyboardButton(f'На {num_with_month(time)}')] for time in range(1, 13)
+        [
+            KeyboardButton(f'{time} мес.'), KeyboardButton(f'{time+1} мес.'), KeyboardButton(f'{time+2} мес.')
+        ]
+        for time in range(1, 13, 3)
     ]
 
     time_buttons.append([KeyboardButton('Назад ⬅')])
@@ -146,7 +157,7 @@ def get_seasoned_things_type(update, context):
     ]
 
     things_types_buttons = [
-        [KeyboardButton(type_)] for type_ in things_types
+        [KeyboardButton(things_types[i]), KeyboardButton(things_types[i+1])] for i in range(0, 4, 2)
     ]
 
     things_types_buttons.append([KeyboardButton('Назад ⬅')])
@@ -181,12 +192,10 @@ def get_seasoned_things_count(update, context):
     return GET_SEASONED_THINGS_COUNT
 
 
-def get_seasoned_things_time(update, context):
+def get_seasoned_things_time_type(update, context):
     user_data = context.user_data
     if update.message.text != 'Назад ⬅':
         user_data['seasoned_count'] = int(update.message.text)
-
-    count = user_data['seasoned_count']
 
     # Replace with get from db
     things_price = {
@@ -196,24 +205,57 @@ def get_seasoned_things_time(update, context):
         'Велосипед': (150, 400)
     }
     thing = context.user_data['seasoned_type']
-    result = f'Ваш заказ ({user_data["seasoned_count"]} {user_data["seasoned_type"]}) обойдется в '
     price = things_price.get(thing)
     week_price, month_price = price
-    if week_price:
-        result += f'{num_with_ruble(week_price * count)} в неделю или '
-    result += f'{num_with_ruble(month_price * count)} в месяц'
 
-    time_buttons = (
-        ([[KeyboardButton(f'На {num_with_week(time)}')] for time in range(1, 4)] if week_price else [])
-        + [[KeyboardButton(f'На {num_with_month(time)}')] for time in range(1, 7)]
-        + [[KeyboardButton('Назад ⬅')]]
-    )
+    if week_price is None:
+        update.message.reply_text(f'Данный тип вещей можно хранить только помесячно. '
+                                  f'Это будет стоить {month_price} руб./мес. за шт.')
+        user_data['time_type'] = 'month'
+        return get_seasoned_things_time(update, context)
+
+    keyboard = [
+        [
+            KeyboardButton(f'Недели\n({week_price} руб./нед. за шт.)'),
+            KeyboardButton(f'Месяцы\n({month_price} руб./мес. за шт.)')
+        ],
+        [
+            KeyboardButton('Назад ⬅')
+        ]
+    ]
+
+    reply_markup = ReplyKeyboardMarkup(keyboard)
+
+    update.message.reply_text('Вы хотите снять ячейку хранения на 1-3 недели или несколько месяцев?',
+                              reply_markup=reply_markup)
+
+    return GET_SEASONED_THINGS_TIME_TYPE
+
+
+def get_seasoned_things_time(update, context):
+    user_data = context.user_data
+
+    if update.message.text != 'Назад ⬅' and update.message.text.startswith(('Месяцы', 'Недели')):
+        user_data['seasoned_time_type'] = 'month' if update.message.text.startswith('Месяцы') else 'week'
+    time_type = user_data['seasoned_time_type']
+
+    # Replace with get from db
+    if time_type == 'week':
+        time_buttons = [
+            [KeyboardButton('1 неделя'), KeyboardButton('2 недели'), KeyboardButton('3 недели')],
+            [KeyboardButton('Назад ⬅')]
+        ]
+    else:
+        time_buttons = [
+            [
+                KeyboardButton(f'{time} мес.'), KeyboardButton(f'{time + 1} мес.'), KeyboardButton(f'{time + 2} мес.')
+            ]
+            for time in range(1, 7, 3)
+        ]
+
+        time_buttons.append([KeyboardButton('Назад ⬅')])
 
     reply_markup = ReplyKeyboardMarkup(time_buttons)
-
-    update.message.reply_text(
-        result
-    )
 
     update.message.reply_text(
         'Выберите на какой срок вы хотите снять ячейку хранения',
@@ -225,8 +267,7 @@ def get_seasoned_things_time(update, context):
 
 def get_things_confirmation(update, context):
     keyboard = [
-        [KeyboardButton('Подтвердить')],
-        [KeyboardButton('Назад ⬅')]
+        [KeyboardButton('Подтвердить'), KeyboardButton('Назад ⬅')]
     ]
 
     reply_markup = ReplyKeyboardMarkup(keyboard)
@@ -234,27 +275,25 @@ def get_things_confirmation(update, context):
     user_data = context.user_data
 
     if user_data['supertype'] == 'Другое':
-        time = re.match(r'^На (\d{1,2}) месяц(ев|а|)$', update.message.text).groups()[0]
+        time = re.match(r'^(\d{1,2}) мес.$', update.message.text).groups()[0]
         user_data['other_time'] = int(time)
 
         update.message.reply_text(
             f'Ваш заказ: \n'
             f'Тип: {user_data["supertype"]}\n'
-            f'Площадь: {user_data["other_area"]}\n'
-            f'Время хранения: {user_data["other_time"]}\n'
+            f'Площадь: {user_data["other_area"]} м²\n'
+            f'Время хранения: {num_with_month(user_data["other_time"])}\n'
             f'Итоговая цена: N',
             reply_markup=reply_markup
         )
     elif user_data['supertype'] == 'Сезонные вещи':
-        if 'месяц' in update.message.text:
-            time = int(re.match(r'^На (\d{1,2}) месяц(ев|а|)$', update.message.text).groups()[0])
-            time_type = 'month'
-        elif 'недел' in update.message.text:
-            time = int(re.match(r'^На (\d) недел(я|и)$', update.message.text).groups()[0])
-            time_type = 'week'
+        if 'мес' in update.message.text:
+            time = int(re.match(r'^(\d{1,2}) мес.$', update.message.text).groups()[0])
+        elif 'нед' in update.message.text:
+            time = int(re.match(r'^(\d) недел(я|и)$', update.message.text).groups()[0])
 
         user_data['seasoned_time'] = time
-        user_data['seasoned_time_type'] = time_type
+        time_type = user_data['seasoned_time_type']
 
         update.message.reply_text(
             f'Ваш заказ: \n'
@@ -446,7 +485,7 @@ def tmp_reply(update, _):
 
 def get_things_confirmation_back(update, context):
     if context.user_data['supertype'] == 'Сезонные вещи':
-        return get_seasoned_things_count(update, context)
+        return get_seasoned_things_time_type(update, context)
     else:
         return get_other_things_area(update, context)
 
@@ -479,7 +518,7 @@ if __name__ == '__main__':
             # ветка других вещей
             GET_OTHER_THINGS_AREA: [
                 MessageHandler(
-                    Filters.regex(r'^\d{1,2} кв\.м за \d{3,4} рубл(я|ей|ь) в месяц$'), get_other_things_time
+                    Filters.regex(r'^\d{1,2} м² за \d{3,4} руб./мес.$'), get_other_things_time
                 ),
                 MessageHandler(Filters.regex('^Назад ⬅$'), get_things_type)
             ],
@@ -489,12 +528,17 @@ if __name__ == '__main__':
                 MessageHandler(Filters.text, get_seasoned_things_count)
             ],
             GET_SEASONED_THINGS_COUNT: [
-                MessageHandler(Filters.regex(r'^\d+$'), get_seasoned_things_time),
+                MessageHandler(Filters.regex(r'^\d+$'), get_seasoned_things_time_type),
                 MessageHandler(Filters.regex('^Назад ⬅$'), get_seasoned_things_type)
             ],
+            GET_SEASONED_THINGS_TIME_TYPE: [
+                MessageHandler(Filters.regex(r'Месяцы\n\(\d{2,4} руб\./мес\. за шт\.\)'), get_seasoned_things_time),
+                MessageHandler(Filters.regex(r'Недели\n\(\d{2,4} руб\./нед\. за шт\.\)'), get_seasoned_things_time),
+                MessageHandler(Filters.regex('^Назад ⬅$'), get_seasoned_things_count)
+            ],
             GET_THINGS_CONFIRMATION: [
-                MessageHandler(Filters.regex(r'^На \d{1,2} месяц(ев|а|)$'), get_things_confirmation),
-                MessageHandler(Filters.regex(r'^На \d недел(я|и)$'), get_things_confirmation),
+                MessageHandler(Filters.regex(r'^\d{1,2} мес.$'), get_things_confirmation),
+                MessageHandler(Filters.regex(r'^\d недел(я|и)$'), get_things_confirmation),
                 MessageHandler(Filters.regex('^Назад ⬅$'), get_things_confirmation_back)
             ],
             GET_ACCEPT: [
