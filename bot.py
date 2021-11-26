@@ -453,14 +453,15 @@ def correct_birthdate(update, context):
 
     update.message.reply_text(
         f'Стоимость бронирования: {total_price} руб.',
-        reply_markup=ReplyKeyboardMarkup([['Оплатить']],
-        resize_keyboard=True,
+        reply_markup=ReplyKeyboardMarkup(
+            [['Оплатить']],
+            resize_keyboard=True,
         ),
     )
     return TAKE_PAYMENT
 
 
-def incorrect_birthdate(update, context):
+def incorrect_birthdate(update, _):
     update.message.reply_text(
         'Пожалуйста, введите дату рождения в формате "8.12.1997"'
     )
@@ -563,24 +564,24 @@ if __name__ == '__main__':
             ],
             GET_FULL_NAME: [
                 MessageHandler(
-                    Filters.regex('[а-яА-Я]{2,20}( )[а-яА-Я]{2,20}( )[а-яА-Я]{6,20}'),
+                    Filters.regex(r'[а-яА-Я]{2,20}( )[а-яА-Я]{2,20}( )[а-яА-Я]{6,20}'),
                     phone
                 ),
             ],
             GET_PHONE: [
                 MessageHandler(Filters.contact, correct_phone),
                 MessageHandler(
-                    Filters.regex('^\+?\d{1,3}?( |-)?\d{3}( |-)?\d{3}( |-)?\d{2}( |-)?\d{2}$'),
+                    Filters.regex(r'^\+?\d{1,3}?( |-)?\d{3}( |-)?\d{3}( |-)?\d{2}( |-)?\d{2}$'),
                     correct_phone,
                 ),
                 MessageHandler(Filters.text, incorrect_phone),
             ],
             GET_PASSPORT: [
-                MessageHandler(Filters.regex('^\d{4}( )?\d{6}$'), birthdate),
+                MessageHandler(Filters.regex(r'^\d{4}( )?\d{6}$'), birthdate),
             ],
             GET_BIRTHDATE: [
                 MessageHandler(
-                    Filters.regex('^(0?[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])\.19|20\d{2}$'),
+                    Filters.regex(r'^(0?[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])\.19|20\d{2}$'),
                     correct_birthdate,
                 ),
                 MessageHandler(Filters.text, incorrect_birthdate),
