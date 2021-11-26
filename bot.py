@@ -1,10 +1,11 @@
 import logging
 import re
 from telegram import KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove
-from telegram.ext import Updater, CommandHandler, ConversationHandler, MessageHandler, Filters
+from telegram.ext import Updater, CommandHandler, ConversationHandler, MessageHandler, Filters, PreCheckoutQueryHandler
 from environs import Env
 from words_declension import num_with_week, num_with_month, num_with_ruble
 from helpers import add_user, get_user, get_code
+from payments import take_payment, count_price, precheckout, PRECHECKOUT, SUCCESS_PAYMENT, TAKE_PAYMENT
 
 
 GET_ADDRESS, GET_ACCEPT, GET_THINGS_TYPE, GET_OTHER_THINGS_AREA, GET_THINGS_CONFIRMATION, GET_PERSONAL_DATA = range(6)
@@ -393,13 +394,15 @@ def correct_birthdate(update, context):
     if not get_user(update.message.from_user.id):
         add_user(context.user_data)
 
+    total_price = count_price(update, context)
+
     update.message.reply_text(
-        'Стоимость бронирования: N руб.',
+        f'Стоимость бронирования: {total_price} руб.',
         reply_markup=ReplyKeyboardMarkup([['Оплатить']],
         resize_keyboard=True,
         ),
     )
-    return GET_PAYMENT_ACCEPT
+    return TAKE_PAYMENT
 
 
 def incorrect_birthdate(update, context):
@@ -519,8 +522,14 @@ if __name__ == '__main__':
                 ),
                 MessageHandler(Filters.text, incorrect_birthdate),
             ],
-            GET_PAYMENT_ACCEPT: [
-                MessageHandler(Filters.regex('^Оплатить$'), success_payment),
+            TAKE_PAYMENT: [
+                MessageHandler(Filters.regex('^Оплатить$'), take_payment),
+            ],
+            PRECHECKOUT: [
+                PreCheckoutQueryHandler(precheckout),
+            ],
+            SUCCESS_PAYMENT: [
+                MessageHandler(Filters.successful_payment, success_payment)
             ],
             GET_USER_CHOICE: [
                 MessageHandler(Filters.regex('^Забронировать место|Вещи на хранении$'), tmp_reply),
