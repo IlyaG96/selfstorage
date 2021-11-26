@@ -75,7 +75,7 @@ def create_db():
 
     sql_create_prices_table = """CREATE TABLE IF NOT EXISTS prices (
                                            type text PRIMARY KEY,
-                                           category text,
+                                           supertype text,
                                            cost_per_week integer,
                                            cost_per_month integer,
                                            sub_cost integer
@@ -140,11 +140,11 @@ def add_prices():
               VALUES(?,?,?,?,?) '''
     cur = conn.cursor()
 
-    cur.execute(sql, ('Лыжи', 'seasoned_type', 100, 300, None))
-    cur.execute(sql, ('Сноуборд', 'seasoned_type', 100, 300, None))
-    cur.execute(sql, ('Колеса', 'seasoned_type', None, 50, None))
-    cur.execute(sql, ('Велосипед', 'seasoned_type', 150, 400, None))
-    cur.execute(sql, ('Площадь', 'supertype', None, 599, 150))
+    cur.execute(sql, ('Лыжи', 'Сезонные вещи', 100, 300, None))
+    cur.execute(sql, ('Сноуборд', 'Сезонные вещи', 100, 300, None))
+    cur.execute(sql, ('Колеса', 'Сезонные вещи', None, 50, None))
+    cur.execute(sql, ('Велосипед', 'Сезонные вещи', 150, 400, None))
+    cur.execute(sql, ('Площадь', 'Другое', None, 599, 150))
     
     conn.commit()
 
@@ -152,7 +152,7 @@ def add_prices():
 def get_seasoned_prices():
     conn = create_connection(selfstorage)
     cur = conn.cursor()
-    cur.execute("SELECT type, cost_per_week, cost_per_month FROM prices WHERE category=?", ('seasoned_type',))
+    cur.execute("SELECT type, cost_per_week, cost_per_month FROM prices WHERE category=?", ('Сезонные вещи',))
     rows = cur.fetchall()
 
     things_price = dict()
@@ -165,7 +165,7 @@ def get_seasoned_prices():
 def get_other_prices():
     conn = create_connection(selfstorage)
     cur = conn.cursor()
-    cur.execute("SELECT cost_per_month, sub_cost FROM prices WHERE category=?", ('supertype',))
+    cur.execute("SELECT cost_per_month, sub_cost FROM prices WHERE category=?", ('Другое',))
     row = cur.fetchone()
     
     price = (row[0], row[1])
