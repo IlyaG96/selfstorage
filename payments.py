@@ -51,8 +51,6 @@ def count_price(update, context):
 
         return price
 
-
-
     else:
         prices = get_seasoned_prices()
         time = user_data['seasoned_time']
