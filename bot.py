@@ -536,6 +536,8 @@ if __name__ == '__main__':
             ],
         },
         fallbacks=[CommandHandler('start', start), MessageHandler(Filters.regex('^Начать$'), start)],
+        per_user=True,
+        per_chat=False
     )
     dispatcher.add_handler(conv_handler)
     updater.start_polling()
