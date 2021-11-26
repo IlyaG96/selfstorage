@@ -136,7 +136,7 @@ def get_user(user_id):
 
 def add_prices():
     conn = create_connection(selfstorage)
-    sql = ''' INSERT INTO prices(type, category, cost_per_week, cost_per_month, sub_cost)
+    sql = ''' INSERT INTO prices(type, supertype, cost_per_week, cost_per_month, sub_cost)
               VALUES(?,?,?,?,?) '''
     cur = conn.cursor()
 
@@ -152,7 +152,7 @@ def add_prices():
 def get_seasoned_prices():
     conn = create_connection(selfstorage)
     cur = conn.cursor()
-    cur.execute("SELECT type, cost_per_week, cost_per_month FROM prices WHERE category=?", ('Сезонные вещи',))
+    cur.execute("SELECT type, cost_per_week, cost_per_month FROM prices WHERE supertype=?", ('Сезонные вещи',))
     rows = cur.fetchall()
 
     things_price = dict()
@@ -165,7 +165,7 @@ def get_seasoned_prices():
 def get_other_prices():
     conn = create_connection(selfstorage)
     cur = conn.cursor()
-    cur.execute("SELECT cost_per_month, sub_cost FROM prices WHERE category=?", ('Другое',))
+    cur.execute("SELECT cost_per_month, sub_cost FROM prices WHERE supertype=?", ('Другое',))
     row = cur.fetchone()
     
     price = (row[0], row[1])
