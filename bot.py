@@ -472,7 +472,7 @@ def show_things(update, context):
     if context.user_data['things']:
         thing = context.user_data['things'].pop()
         update.message.reply_text(
-                thing[0] + '\n QR-код:',
+                thing[0] + '\nQR-код:',
                 reply_markup=ReplyKeyboardMarkup(
                     reply_keyboard,
                     resize_keyboard=True,
@@ -495,7 +495,7 @@ def show_next_thing(update, context):
     
     thing = context.user_data['things'].pop()
     update.message.reply_text(
-            thing[0] + '\n QR-код:',
+            thing[0] + '\nQR-код:',
             reply_markup=ReplyKeyboardMarkup(
                 reply_keyboard,
                 resize_keyboard=True,
