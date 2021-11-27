@@ -4,3 +4,4 @@ env
 __pycache__
 selfstorage.db
 SelfStorage code.png
+geo.py

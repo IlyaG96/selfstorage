@@ -9,7 +9,6 @@ from words_declension import num_with_week, num_with_month, num_with_ruble
 from helpers import add_user, get_user, get_code, create_db, selfstorage, add_prices, add_reservation, get_reservations, check_age
 from payments import take_payment, count_price, precheckout, PRECHECKOUT, SUCCESS_PAYMENT, TAKE_PAYMENT
 
-
 GET_ADDRESS, GET_ACCEPT, GET_THINGS_TYPE, GET_OTHER_THINGS_AREA, GET_THINGS_CONFIRMATION, GET_PERSONAL_DATA = range(6)
 GET_SEASONED_THINGS_TYPE, GET_SEASONED_THINGS_COUNT, GET_SEASONED_THINGS_TIME_TYPE = range(6, 9)
 GET_NAME_INPUT_CHOICE, GET_PATRONYMIC, GET_FULL_NAME = range(9, 12)
