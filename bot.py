@@ -47,7 +47,7 @@ def start(update, context):
             [KeyboardButton(addresses[num]), KeyboardButton(addresses[num+1])] for num in range(0, len(addresses), 2)
         ]
     
-        reply_markup = ReplyKeyboardMarkup(keyboard)
+        reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
     
         update.message.reply_text(
             'Привет, я бот компании SafeStorage, который поможет вам оставить вещи в ячейке хранения.'
@@ -83,7 +83,7 @@ def get_things_type(update, context):
         ]
     ]
 
-    reply_markup = ReplyKeyboardMarkup(keyboard)
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
 
     update.message.reply_text(
         'Теперь выберите, пожалуйста, тип вещей для хранения',
@@ -114,7 +114,7 @@ def get_other_things_area(update, context):
         for area in range(0, 10, 3)
     ]
 
-    reply_markup = ReplyKeyboardMarkup(things_areas_buttons)
+    reply_markup = ReplyKeyboardMarkup(things_areas_buttons, resize_keyboard=True)
 
     update.message.reply_text(
         'Выберите площадь необходимую для хранения ваших вещей',
@@ -139,7 +139,7 @@ def get_other_things_time(update, context):
 
     time_buttons.append([KeyboardButton('Назад ⬅')])
 
-    reply_markup = ReplyKeyboardMarkup(time_buttons)
+    reply_markup = ReplyKeyboardMarkup(time_buttons, resize_keyboard=True)
 
     update.message.reply_text(
         'Выберите на какой срок вы хотите снять ячейку хранения',
@@ -164,7 +164,7 @@ def get_seasoned_things_type(update, context):
 
     things_types_buttons.append([KeyboardButton('Назад ⬅')])
 
-    reply_markup = ReplyKeyboardMarkup(things_types_buttons)
+    reply_markup = ReplyKeyboardMarkup(things_types_buttons, resize_keyboard=True)
 
     update.message.reply_text(
         'Выберите вещь, которую будете хранить',
@@ -188,7 +188,7 @@ def get_seasoned_things_count(update, context):
 
     update.message.reply_text(
         'Напишите количество вещей',
-        reply_markup=ReplyKeyboardMarkup([['Назад ⬅']])
+        reply_markup=ReplyKeyboardMarkup([['Назад ⬅']], resize_keyboard=True)
     )
 
     return GET_SEASONED_THINGS_COUNT
@@ -226,7 +226,7 @@ def get_seasoned_things_time_type(update, context):
         ]
     ]
 
-    reply_markup = ReplyKeyboardMarkup(keyboard)
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
 
     update.message.reply_text('Вы хотите снять ячейку хранения на 1-3 недели или несколько месяцев?',
                               reply_markup=reply_markup)
@@ -257,7 +257,7 @@ def get_seasoned_things_time(update, context):
 
         time_buttons.append([KeyboardButton('Назад ⬅')])
 
-    reply_markup = ReplyKeyboardMarkup(time_buttons)
+    reply_markup = ReplyKeyboardMarkup(time_buttons, resize_keyboard=True)
 
     update.message.reply_text(
         'Выберите на какой срок вы хотите снять ячейку хранения',
@@ -272,7 +272,7 @@ def get_things_confirmation(update, context):
         [KeyboardButton('Подтвердить'), KeyboardButton('Назад ⬅')]
     ]
 
-    reply_markup = ReplyKeyboardMarkup(keyboard)
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
 
     user_data = context.user_data
 
@@ -317,7 +317,7 @@ def get_agreement_accept(update, _):
         ]
     ]
 
-    reply_markup = ReplyKeyboardMarkup(keyboard)
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
 
     update.message.reply_text(
         'Примите соглашение об обработке персональных данных',
@@ -337,7 +337,7 @@ def accept_failure(update, _):
         ]
     ]
 
-    reply_markup = ReplyKeyboardMarkup(keyboard)
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
 
     update.message.reply_text(
         'К сожалению, без согласия на обработку данных вы не сможете забронировать у нас место',
