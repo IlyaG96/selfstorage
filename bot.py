@@ -165,17 +165,6 @@ def get_seasoned_things_time_type(update, context):
     if update.message.text != 'Назад ⬅':
         user_data['seasoned_count'] = int(update.message.text)
 
-    things_price = get_seasoned_prices()
-    thing = context.user_data['seasoned_type']
-    price = things_price.get(thing)
-    week_price, month_price = price
-
-    if week_price is None:
-        update.message.reply_text(f'Данный тип вещей можно хранить только помесячно. '
-                                  f'Это будет стоить {month_price} руб./мес. за шт.')
-        user_data['time_type'] = 'month'
-        return get_seasoned_things_time(update, context)
-
     keyboard = [
         [
             KeyboardButton(f'Недели'),

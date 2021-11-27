@@ -197,7 +197,7 @@ def add_prices():
 
     cur.execute(sql, ('Лыжи', 'Сезонные вещи', 100, 300, None))
     cur.execute(sql, ('Сноуборд', 'Сезонные вещи', 100, 300, None))
-    cur.execute(sql, ('Колеса', 'Сезонные вещи', None, 50, None))
+    cur.execute(sql, ('Колеса', 'Сезонные вещи', 13, 50, None))
     cur.execute(sql, ('Велосипед', 'Сезонные вещи', 150, 400, None))
     cur.execute(sql, ('Площадь', 'Другое', None, 599, 150))
     
