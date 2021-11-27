@@ -204,6 +204,17 @@ def add_prices():
     conn.commit()
 
 
+def get_seasoned_things():
+    conn = create_connection(selfstorage)
+    cur = conn.cursor()
+    cur.execute("SELECT type FROM prices WHERE supertype=?", ('Сезонные вещи',))
+    rows = cur.fetchall()
+
+    things = [row[0] for row in rows]
+
+    return things
+
+
 def get_seasoned_prices():
     conn = create_connection(selfstorage)
     cur = conn.cursor()
@@ -226,14 +237,3 @@ def get_other_prices():
     price = (row[0], row[1])
 
     return price
-
-
-def check_age(birthdate):
-    birthdate_dt = datetime.strptime(f'{birthdate}', '%d.%m.%Y')
-    age = (datetime.today() - birthdate_dt) // timedelta(days=365.2425)
-    if age < 14:
-        return 'Вы слишком молоды, чтобы бронировать у нас место'
-    elif age > 100:
-        return 'Вы уже не в том возрасте, чтобы бронировать у нас место'
-    else:
-        return ''
