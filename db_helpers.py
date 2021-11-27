@@ -10,8 +10,7 @@ import qrcode
 selfstorage = 'selfstorage.db'
 
 
-def get_code(context_data):
-    key = ''.join(random.choices(string.ascii_letters + string.digits, k = 32))
+def get_code(key):
     img = qrcode.make(key)
     code_file = 'SelfStorage code.png'
     img.save(code_file)
@@ -45,23 +44,21 @@ def create_db():
                                      surname text,
                                      phone text,
                                      passport text,
-                                     birthdate integer,
-                                     warehouse_id integer,
-                                     access_start integer,
-                                     access_end integer,
-                                     key text,
-                                     FOREIGN KEY (warehouse_id) REFERENCES warehouses (id)
+                                     birthdate integer
                                  ); """
 
     sql_create_reservations_table = """CREATE TABLE IF NOT EXISTS reservations (
                                            id integer PRIMARY KEY,
                                            user_id integer,
+                                           warehouse_id integer,
                                            type text,
                                            count integer,
                                            reservation_start integer,
                                            reservation_end integer,
                                            cost integer,
-                                           FOREIGN KEY (user_id) REFERENCES users (id)
+                                           key text,
+                                           FOREIGN KEY (user_id) REFERENCES users (id),
+                                           FOREIGN KEY (warehouse_id) REFERENCES warehouses (id)
                                        );"""
 
     sql_create_warehouses_table = """CREATE TABLE IF NOT EXISTS warehouses (
@@ -109,14 +106,13 @@ def add_user(context_data):
         context_data['last_name'],
         context_data['phone'],
         context_data['passport'],
-        birthdate,
-        context_data['warehouse_id']
+        birthdate
     )
 
     conn = create_connection(selfstorage)
     sql = ''' INSERT INTO users(id, name, patronymic, surname, \
-                  phone, passport, birthdate, warehouse_id)
-              VALUES(?,?,?,?,?,?,?,?) '''
+                  phone, passport, birthdate)
+              VALUES(?,?,?,?,?,?,?) '''
     cur = conn.cursor()
     cur.execute(sql, user)
     conn.commit()
@@ -125,13 +121,14 @@ def add_user(context_data):
 def add_reservation(context_data):
     conn = create_connection(selfstorage)
     cur = conn.cursor()
-    cur.execute("SELECT id FROM reservations")
-    reservation_ids = cur.fetchall()
-    if reservation_ids:
-        reservation_id = max(reservation_ids) + 1
+    cur.execute("SELECT id FROM reservations ORDER BY id DESC LIMIT 1")
+    reservation_max_id = cur.fetchone()
+    if reservation_max_id:
+        reservation_id = reservation_max_id[0] + 1
     else:
         reservation_id = 1
     reservation_start = datetime.today()
+    start = reservation_start.strftime("%d.%m.%Y")
 
     if context_data['supertype'] == 'Сезонные вещи':
         thing_type = context_data['seasoned_type']
@@ -147,38 +144,45 @@ def add_reservation(context_data):
         period_in_weeks = context_data['other_time'] * 4
         reservation_end = reservation_start + timedelta(weeks=period_in_weeks)
 
-    cost = None
+    end = reservation_end.strftime("%d.%m.%Y")    
+
+    cost = context_data['cost']
+    key = ''.join(random.choices(string.ascii_letters + string.digits, k = 32))
 
     reservation = (
         reservation_id,
         context_data['user_id'],
+        context_data['warehouse_id'],
         thing_type,
         count,
         reservation_start,
         reservation_end,
-        cost
+        cost,
+        key
     )
 
     conn = create_connection(selfstorage)
-    sql = ''' INSERT INTO reservations(id, user_id, type, count, \
-                  reservation_start, reservation_end, cost)
-              VALUES(?,?,?,?,?,?,?) '''
+    sql = ''' INSERT INTO reservations(id, user_id, warehouse_id, type, count, \
+                  reservation_start, reservation_end, cost, key)
+              VALUES(?,?,?,?,?,?,?,?,?) '''
     cur = conn.cursor()
     cur.execute(sql, reservation)
     conn.commit()
+
+    return (key, start, end)
 
 
 def get_reservations(user_id):
     conn = create_connection(selfstorage)
     cur = conn.cursor()
-    cur.execute("SELECT type, count, reservation_end FROM reservations WHERE user_id=?", (user_id,))
+    cur.execute("SELECT type, count, reservation_end, key FROM reservations WHERE user_id=? AND type <> ?", (user_id,'Площадь',))
     rows = cur.fetchall()
     reply = []
     for row in rows:
         if datetime.fromisoformat(row[2]) > datetime.today():
-            time_dt = datetime.fromisoformat(row[2])
+            time_dt = datetime.fromisoformat(row[2]) + timedelta(days=1)
             time_out = time_dt.strftime("%d.%m.%Y")
-            reply.append(f'Тип: {row[0]}, количество: {row[1]}\nПериод хранения: до {time_out}')
+            reply.append((f'{row[0]}, {row[1]} шт.\nПериод хранения: до {time_out}', row[3]))
     return reply
 
 
