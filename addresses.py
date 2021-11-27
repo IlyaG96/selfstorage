@@ -69,7 +69,7 @@ def get_address_with_location(update, context):
         context.user_data['location'] = user_location
         if not user_location:
             update.message.reply_text(
-                'Адрес некорректен. Проверьте то что вы ввели, или отправьте гео-точку'
+                'Адрес некорректен. Проверьте то, что вы ввели, или отправьте гео-точку'
             )
             return GET_USER_LOCATION
     else:
