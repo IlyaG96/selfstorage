@@ -5,6 +5,8 @@ from pathlib import Path
 from telegram import KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import Updater, CommandHandler, ConversationHandler, MessageHandler, Filters, PreCheckoutQueryHandler
 from environs import Env
+
+from bot_helpers import build_menu
 from words_declension import num_with_week, num_with_month, num_with_ruble
 from db_helpers import add_user, get_user, get_code, create_db, selfstorage, add_prices, add_reservation, get_reservations, check_age
 from payments import take_payment, count_price, precheckout, PRECHECKOUT, SUCCESS_PAYMENT, TAKE_PAYMENT
@@ -43,9 +45,11 @@ def start(update, context):
             'Походный пр-д, 6'
         ]
 
-        keyboard = [
-            [KeyboardButton(addresses[num]), KeyboardButton(addresses[num+1])] for num in range(0, len(addresses), 2)
+        addresses_buttons = [
+            KeyboardButton(address) for address in addresses
         ]
+
+        keyboard = build_menu(addresses_buttons, n_cols=2)
     
         reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
     
@@ -101,20 +105,13 @@ def get_other_things_area(update, context):
     start_price = 599
     add_price = 150
 
-    things_areas_buttons = [
-        [
-            KeyboardButton(f'{area + 1} м² за {start_price + add_price * area} руб./мес.'),
-            KeyboardButton(f'{area + 2} м² за {start_price + add_price * (area + 1)} руб./мес.'),
-            KeyboardButton(f'{area + 3} м² за {start_price + add_price * (area + 2)} руб./мес.')
-        ] if area < 9
-        else [
-            KeyboardButton(f'{area + 1} м² за {start_price + add_price * area} руб./мес.'),
-            KeyboardButton('Назад ⬅')
-        ]
-        for area in range(0, 10, 3)
-    ]
+    things_areas_buttons = [KeyboardButton(f'{area + 1} м² за {start_price + add_price * area} руб./мес.')
+                            for area in range(1, 11)]
+    things_areas_buttons.append(KeyboardButton('Назад ⬅'))
 
-    reply_markup = ReplyKeyboardMarkup(things_areas_buttons, resize_keyboard=True)
+    things_areas_menu = build_menu(things_areas_buttons, n_cols=3)
+
+    reply_markup = ReplyKeyboardMarkup(things_areas_menu, resize_keyboard=True)
 
     update.message.reply_text(
         'Выберите площадь необходимую для хранения ваших вещей',
@@ -131,15 +128,14 @@ def get_other_things_time(update, context):
         context.user_data['other_area'] = int(area)
 
     time_buttons = [
-        [
-            KeyboardButton(f'{time} мес.'), KeyboardButton(f'{time+1} мес.'), KeyboardButton(f'{time+2} мес.')
-        ]
-        for time in range(1, 13, 3)
+        KeyboardButton(f'{time} мес.')
+        for time in range(1, 13)
     ]
+    time_buttons.append(KeyboardButton('Назад ⬅'))
 
-    time_buttons.append([KeyboardButton('Назад ⬅')])
+    time_menu = build_menu(time_buttons, n_cols=3)
 
-    reply_markup = ReplyKeyboardMarkup(time_buttons, resize_keyboard=True)
+    reply_markup = ReplyKeyboardMarkup(time_menu, resize_keyboard=True)
 
     update.message.reply_text(
         'Выберите на какой срок вы хотите снять ячейку хранения',
@@ -159,12 +155,12 @@ def get_seasoned_things_type(update, context):
     ]
 
     things_types_buttons = [
-        [KeyboardButton(things_types[i]), KeyboardButton(things_types[i+1])] for i in range(0, 4, 2)
+        KeyboardButton(things_types[i]) for i in range(0, 4)
     ]
 
-    things_types_buttons.append([KeyboardButton('Назад ⬅')])
+    things_types_menu = build_menu(things_types_buttons, n_cols=2, footer_buttons=[KeyboardButton('Назад ⬅')])
 
-    reply_markup = ReplyKeyboardMarkup(things_types_buttons, resize_keyboard=True)
+    reply_markup = ReplyKeyboardMarkup(things_types_menu, resize_keyboard=True)
 
     update.message.reply_text(
         'Выберите вещь, которую будете хранить',
@@ -244,20 +240,20 @@ def get_seasoned_things_time(update, context):
     # Replace with get from db
     if time_type == 'week':
         time_buttons = [
-            [KeyboardButton('1 неделя'), KeyboardButton('2 недели'), KeyboardButton('3 недели')],
-            [KeyboardButton('Назад ⬅')]
+            KeyboardButton('1 неделя'), KeyboardButton('2 недели'), KeyboardButton('3 недели'),
+            KeyboardButton('Назад ⬅')
         ]
     else:
         time_buttons = [
-            [
-                KeyboardButton(f'{time} мес.'), KeyboardButton(f'{time + 1} мес.'), KeyboardButton(f'{time + 2} мес.')
-            ]
-            for time in range(1, 7, 3)
+            KeyboardButton(f'{time} мес.')
+            for time in range(1, 7)
         ]
 
-        time_buttons.append([KeyboardButton('Назад ⬅')])
+        time_buttons.append(KeyboardButton('Назад ⬅'))
 
-    reply_markup = ReplyKeyboardMarkup(time_buttons, resize_keyboard=True)
+    time_menu = build_menu(time_buttons, n_cols=3)
+
+    reply_markup = ReplyKeyboardMarkup(time_menu, resize_keyboard=True)
 
     update.message.reply_text(
         'Выберите на какой срок вы хотите снять ячейку хранения',
