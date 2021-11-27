@@ -201,8 +201,8 @@ def get_seasoned_things_time_type(update, context):
 
     keyboard = [
         [
-            KeyboardButton(f'Недели\n({week_price} руб./нед. за шт.)'),
-            KeyboardButton(f'Месяцы\n({month_price} руб./мес. за шт.)')
+            KeyboardButton(f'Недели'),
+            KeyboardButton(f'Месяцы')
         ],
         [
             KeyboardButton('Назад ⬅')
@@ -224,18 +224,26 @@ def get_seasoned_things_time(update, context):
         user_data['seasoned_time_type'] = 'month' if update.message.text.startswith('Месяцы') else 'week'
     time_type = user_data['seasoned_time_type']
 
+    things_price = get_seasoned_prices()
+    thing = user_data['seasoned_type']
+    price = things_price.get(thing)
+    week_price, month_price = price
+    count = user_data['seasoned_count']
+
     if time_type == 'week':
         time_buttons = [
-            KeyboardButton('1 неделя'), KeyboardButton('2 недели'), KeyboardButton('3 недели'),
-            KeyboardButton('Назад ⬅')
+            KeyboardButton(f'{time+1} нед.\n'
+                           f'({(time+1) * week_price * count} руб.)')
+            for time in range(3)
         ]
     else:
         time_buttons = [
-            KeyboardButton(f'{time} мес.')
-            for time in range(1, 7)
+            KeyboardButton(f'{time + 1} мес.\n'
+                           f'({(time + 1) * month_price * count} руб.)')
+            for time in range(6)
         ]
 
-        time_buttons.append(KeyboardButton('Назад ⬅'))
+    time_buttons.append(KeyboardButton('Назад ⬅'))
 
     time_menu = build_menu(time_buttons, n_cols=3)
 
@@ -271,10 +279,10 @@ def get_things_confirmation(update, context):
             reply_markup=reply_markup
         )
     elif user_data['supertype'] == 'Сезонные вещи':
-        if 'мес' in update.message.text:
-            time = int(re.match(r'^(\d{1,2}) мес.$', update.message.text).groups()[0])
-        elif 'нед' in update.message.text:
-            time = int(re.match(r'^(\d) недел(я|и)$', update.message.text).groups()[0])
+        if 'нед' in update.message.text:
+            time = int(re.match(r'^(\d) нед\.\n\(\d{2,5} руб\.\)$', update.message.text).groups()[0])
+        elif 'мес' in update.message.text:
+            time = int(re.match(r'^(\d) мес\.\n\(\d{2,5} руб\.\)$', update.message.text).groups()[0])
 
         user_data['seasoned_time'] = time
         time_type = user_data['seasoned_time_type']
@@ -542,13 +550,15 @@ if __name__ == '__main__':
                 MessageHandler(Filters.regex('^Назад ⬅$'), get_seasoned_things_type)
             ],
             GET_SEASONED_THINGS_TIME_TYPE: [
-                MessageHandler(Filters.regex(r'Месяцы\n\(\d{2,4} руб\./мес\. за шт\.\)'), get_seasoned_things_time),
-                MessageHandler(Filters.regex(r'Недели\n\(\d{2,4} руб\./нед\. за шт\.\)'), get_seasoned_things_time),
+                MessageHandler(Filters.regex(r'Месяцы'), get_seasoned_things_time),
+                MessageHandler(Filters.regex(r'Недели'), get_seasoned_things_time),
                 MessageHandler(Filters.regex('^Назад ⬅$'), get_seasoned_things_count)
             ],
             GET_THINGS_CONFIRMATION: [
                 MessageHandler(Filters.regex(r'^\d{1,2} мес.$'), get_things_confirmation),
                 MessageHandler(Filters.regex(r'^\d недел(я|и)$'), get_things_confirmation),
+                MessageHandler(Filters.regex(r'^\d нед\.\n\(\d{2,5} руб\.\)$'), get_things_confirmation),
+                MessageHandler(Filters.regex(r'^\d мес\.\n\(\d{2,5} руб\.\)$'), get_things_confirmation),
                 MessageHandler(Filters.regex('^Назад ⬅$'), get_things_confirmation_back)
             ],
             GET_ACCEPT: [
