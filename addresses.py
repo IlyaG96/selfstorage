@@ -97,7 +97,7 @@ def get_address_with_location(update, context):
         text,
         reply_markup=reply_markup
     )
-    return GET_ADDRESS
+    return GET_ADDRESS_WITH_LOCATION
 
 
 def get_user_location(update, context):

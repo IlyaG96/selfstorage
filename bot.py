@@ -522,7 +522,7 @@ if __name__ == '__main__':
                 MessageHandler(Filters.text, get_things_type)
             ],
             GET_ADDRESS_WITH_LOCATION: [
-                MessageHandler(Filters.regex('^Назад ⬅$'), start),
+                MessageHandler(Filters.regex('^Назад ⬅$'), get_user_location),
                 MessageHandler(Filters.text, get_things_type)
             ],
             GET_THINGS_TYPE: [
