@@ -13,13 +13,13 @@ def take_payment(update, context):
     env.read_env()
     sb_token = env('SB_TOKEN')
     chat_id = update.message.chat_id
-    title = "Оплата ячейки хранения"
-    description = "Платим за ..."
+    title = "Ваш заказ"
+    description = "Оплата ячейки хранения"
     payload = "Custom-Payload"
 
     provider_token = sb_token
     currency = "RUB"
-    prices = [LabeledPrice("Test", price * 100)]
+    prices = [LabeledPrice("Стоимость", price * 100)]
 
     context.bot.send_invoice(
         chat_id, title, description, payload, provider_token, currency, prices
