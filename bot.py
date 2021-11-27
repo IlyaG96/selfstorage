@@ -12,7 +12,7 @@ from bot_helpers import build_menu, check_age
 from words_declension import num_with_week, num_with_month, num_with_ruble
 from db_helpers import add_user, get_user, get_code, create_db, selfstorage, add_prices, add_reservation, \
     get_reservations, get_other_prices, get_seasoned_prices, get_seasoned_things, add_warehouses, \
-    get_warehouses_with_short_name
+    get_warehouses_with_short_name, get_warehouse_id_by_short_name
 from payments import take_payment, count_price, precheckout, PRECHECKOUT, SUCCESS_PAYMENT, TAKE_PAYMENT
 
 GET_ACCEPT, GET_THINGS_TYPE, GET_OTHER_THINGS_AREA, GET_THINGS_CONFIRMATION, GET_PERSONAL_DATA = range(5)
@@ -49,7 +49,7 @@ def get_things_type(update, context):
         short_names = tuple(addresses.values())
 
         if update.message.text.startswith(short_names):
-            context.user_data['warehouse_id'] = update.message.text
+            context.user_data['warehouse_id'] = get_warehouse_id_by_short_name(update.message.text)
         else:
             return GET_ADDRESS
 
