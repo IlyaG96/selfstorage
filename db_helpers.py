@@ -204,6 +204,17 @@ def add_prices():
     conn.commit()
 
 
+def get_seasoned_things():
+    conn = create_connection(selfstorage)
+    cur = conn.cursor()
+    cur.execute("SELECT type FROM prices WHERE supertype=?", ('Сезонные вещи',))
+    rows = cur.fetchall()
+
+    things = [row[0] for row in rows]
+
+    return things
+
+
 def get_seasoned_prices():
     conn = create_connection(selfstorage)
     cur = conn.cursor()

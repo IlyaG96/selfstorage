@@ -8,7 +8,8 @@ from environs import Env
 
 from bot_helpers import build_menu
 from words_declension import num_with_week, num_with_month, num_with_ruble
-from db_helpers import add_user, get_user, get_code, create_db, selfstorage, add_prices, add_reservation, get_reservations, check_age
+from db_helpers import add_user, get_user, get_code, create_db, selfstorage, add_prices, add_reservation, \
+    get_reservations, check_age, get_other_prices, get_seasoned_prices, get_seasoned_things
 from payments import take_payment, count_price, precheckout, PRECHECKOUT, SUCCESS_PAYMENT, TAKE_PAYMENT
 
 
@@ -101,9 +102,7 @@ def get_other_things_area(update, context):
     if update.message.text != 'Назад ⬅':
         context.user_data['supertype'] = update.message.text
 
-    # replace with get from db
-    start_price = 599
-    add_price = 150
+    start_price, add_price = get_other_prices()
 
     things_areas_buttons = [KeyboardButton(f'{area + 1} м² за {start_price + add_price * area} руб./мес.')
                             for area in range(1, 11)]
@@ -149,10 +148,7 @@ def get_seasoned_things_type(update, context):
     if update.message.text != 'Назад ⬅':
         context.user_data['supertype'] = update.message.text
 
-    # Replace with get from db
-    things_types = [
-        'Лыжи', 'Сноуборд', 'Велосипед', 'Колеса'
-    ]
+    things_types = get_seasoned_things()
 
     things_types_buttons = [
         KeyboardButton(things_types[i]) for i in range(0, 4)
@@ -172,10 +168,7 @@ def get_seasoned_things_type(update, context):
 
 def get_seasoned_things_count(update, context):
     if update.message.text != 'Назад ⬅':
-        # Replace with get from db
-        things_types = [
-            'Лыжи', 'Сноуборд', 'Велосипед', 'Колеса'
-        ]
+        things_types = get_seasoned_things()
 
         if update.message.text in things_types:
             context.user_data['seasoned_type'] = update.message.text
@@ -195,13 +188,7 @@ def get_seasoned_things_time_type(update, context):
     if update.message.text != 'Назад ⬅':
         user_data['seasoned_count'] = int(update.message.text)
 
-    # Replace with get from db
-    things_price = {
-        'Лыжи': (100, 300),
-        'Сноуборд': (100, 300),
-        'Колеса': (None, 50),
-        'Велосипед': (150, 400)
-    }
+    things_price = get_seasoned_prices()
     thing = context.user_data['seasoned_type']
     price = things_price.get(thing)
     week_price, month_price = price
@@ -237,7 +224,6 @@ def get_seasoned_things_time(update, context):
         user_data['seasoned_time_type'] = 'month' if update.message.text.startswith('Месяцы') else 'week'
     time_type = user_data['seasoned_time_type']
 
-    # Replace with get from db
     if time_type == 'week':
         time_buttons = [
             KeyboardButton('1 неделя'), KeyboardButton('2 недели'), KeyboardButton('3 недели'),
