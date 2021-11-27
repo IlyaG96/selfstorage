@@ -175,14 +175,17 @@ def add_reservation(context_data):
 def get_reservations(user_id):
     conn = create_connection(selfstorage)
     cur = conn.cursor()
-    cur.execute("SELECT type, count, reservation_end, key FROM reservations WHERE user_id=? AND type <> ?", (user_id,'Площадь',))
+    sql = ''' SELECT type, count, reservation_end, key, warehouses.short_name
+              FROM reservations JOIN warehouses ON reservations.warehouse_id = warehouses.id
+              WHERE user_id=? AND type <> ? '''
+    cur.execute(sql, (user_id,'Площадь',))
     rows = cur.fetchall()
     reply = []
     for row in rows:
         if datetime.fromisoformat(row[2]) > datetime.today():
             time_dt = datetime.fromisoformat(row[2]) + timedelta(days=1)
             time_out = time_dt.strftime("%d.%m.%Y")
-            reply.append((f'{row[0]}, {row[1]} шт.\nПериод хранения: до {time_out}', row[3]))
+            reply.append((f'{row[0]}, {row[1]} шт.\nСклад {row[4]}\nПериод хранения: до {time_out}', row[3]))
     return reply
 
 
