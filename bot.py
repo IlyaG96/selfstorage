@@ -414,9 +414,9 @@ def birthdate(update, context):
 
 
 def correct_birthdate(update, context):
-    check_birthdate = check_age(update.message.text)
+    check_birthdate = check_age(update.message.text.replace(',','.'))
     if not check_birthdate:
-        context.user_data['birthdate'] = update.message.text
+        context.user_data['birthdate'] = update.message.text.replace(',','.')
     
         if not get_user(update.message.from_user.id):
             add_user(context.user_data)
@@ -634,7 +634,7 @@ if __name__ == '__main__':
             ],
             GET_BIRTHDATE: [
                 MessageHandler(
-                    Filters.regex(r'^(0?[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])\.19|20\d{2}$'),
+                    Filters.regex(r'^(0?[1-9]|[12][0-9]|3[01])(.|,)(0?[1-9]|1[0-2])(.|,)(19|20)\d{2}$'),
                     correct_birthdate,
                 ),
                 MessageHandler(Filters.text, incorrect_birthdate),
