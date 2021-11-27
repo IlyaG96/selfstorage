@@ -33,7 +33,9 @@ def get_address_type(update, _):
     return GET_ADDRESS_TYPE
 
 
-def get_address(update, _):
+def get_address(update, context):
+    context.user_data['is_located'] = False
+
     addresses = get_warehouses_with_short_name()
 
     addresses_buttons = [
@@ -56,18 +58,22 @@ def get_address(update, _):
     return GET_ADDRESS
 
 
-def get_address_with_location(update, _):
+def get_address_with_location(update, context):
     if update.message.location:
         user_location = (
             update.message.location['latitude'], update.message.location['longitude']
         )
-    else:
+        context.user_data['location'] = user_location
+    elif update.message.text != 'Назад ⬅':
         user_location = get_location_by_address(update.message.text)
+        context.user_data['location'] = user_location
         if not user_location:
             update.message.reply_text(
                 'Адрес некорректен. Проверьте то что вы ввели, или отправьте гео-точку'
             )
             return GET_USER_LOCATION
+    else:
+        user_location = context.user_data['location']
 
     addresses_with_shortnames = get_warehouses_with_short_name()
 
@@ -94,7 +100,9 @@ def get_address_with_location(update, _):
     return GET_ADDRESS
 
 
-def get_user_location(update, _):
+def get_user_location(update, context):
+    context.user_data['is_located'] = True
+
     user_location_buttons = [
         [KeyboardButton('Отправить мое местоположение', request_location=True), KeyboardButton('Назад ⬅')]
     ]

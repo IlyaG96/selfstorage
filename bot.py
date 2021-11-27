@@ -487,6 +487,13 @@ def get_personal_data_back(update, context):
         return get_other_things_time(update, context)
 
 
+def get_things_type_back(update, context):
+    if context.user_data['is_located']:
+        return get_address_with_location(update, context)
+    else:
+        return get_address(update, context)
+
+
 if __name__ == '__main__':
     env = Env()
     env.read_env()
@@ -515,12 +522,13 @@ if __name__ == '__main__':
                 MessageHandler(Filters.text, get_things_type)
             ],
             GET_ADDRESS_WITH_LOCATION: [
+                MessageHandler(Filters.regex('^Назад ⬅$'), start),
                 MessageHandler(Filters.text, get_things_type)
             ],
             GET_THINGS_TYPE: [
                 MessageHandler(Filters.regex('^Другое$'), get_other_things_area),
                 MessageHandler(Filters.regex('^Сезонные вещи$'), get_seasoned_things_type),
-                MessageHandler(Filters.regex('^Назад ⬅$'), get_address)
+                MessageHandler(Filters.regex('^Назад ⬅$'), get_things_type_back)
             ],
             # ветка других вещей
             GET_OTHER_THINGS_AREA: [
