@@ -1,6 +1,6 @@
 from telegram import LabeledPrice
 from environs import Env
-from helpers import get_other_prices, get_seasoned_prices
+from db_helpers import get_other_prices, get_seasoned_prices
 
 TAKE_PAYMENT, PRECHECKOUT, SUCCESS_PAYMENT = range(20, 23)
 

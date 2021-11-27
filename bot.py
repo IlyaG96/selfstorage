@@ -6,7 +6,7 @@ from telegram import KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import Updater, CommandHandler, ConversationHandler, MessageHandler, Filters, PreCheckoutQueryHandler
 from environs import Env
 from words_declension import num_with_week, num_with_month, num_with_ruble
-from helpers import add_user, get_user, get_code, create_db, selfstorage, add_prices, add_reservation, get_reservations, check_age
+from db_helpers import add_user, get_user, get_code, create_db, selfstorage, add_prices, add_reservation, get_reservations, check_age
 from payments import take_payment, count_price, precheckout, PRECHECKOUT, SUCCESS_PAYMENT, TAKE_PAYMENT
 
 
