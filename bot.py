@@ -6,16 +6,18 @@ from telegram import KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import Updater, CommandHandler, ConversationHandler, MessageHandler, Filters, PreCheckoutQueryHandler
 from environs import Env
 
+from addresses import get_address, get_address_type, get_user_location, GET_ADDRESS, GET_ADDRESS_TYPE, \
+    GET_USER_LOCATION, get_address_with_location
 from bot_helpers import build_menu, check_age
 from words_declension import num_with_week, num_with_month, num_with_ruble
 from db_helpers import add_user, get_user, get_code, create_db, selfstorage, add_prices, add_reservation, \
     get_reservations, get_other_prices, get_seasoned_prices, get_seasoned_things
 from payments import take_payment, count_price, precheckout, PRECHECKOUT, SUCCESS_PAYMENT, TAKE_PAYMENT
 
-GET_ADDRESS, GET_ACCEPT, GET_THINGS_TYPE, GET_OTHER_THINGS_AREA, GET_THINGS_CONFIRMATION, GET_PERSONAL_DATA = range(6)
-GET_SEASONED_THINGS_TYPE, GET_SEASONED_THINGS_COUNT, GET_SEASONED_THINGS_TIME_TYPE = range(6, 9)
-GET_NAME_INPUT_CHOICE, GET_PATRONYMIC, GET_FULL_NAME = range(9, 12)
-GET_PHONE, GET_PASSPORT, GET_BIRTHDATE, GET_PAYMENT_ACCEPT, GET_USER_CHOICE = range(12, 17)
+GET_ACCEPT, GET_THINGS_TYPE, GET_OTHER_THINGS_AREA, GET_THINGS_CONFIRMATION, GET_PERSONAL_DATA = range(5)
+GET_SEASONED_THINGS_TYPE, GET_SEASONED_THINGS_COUNT, GET_SEASONED_THINGS_TIME_TYPE = range(5, 8)
+GET_NAME_INPUT_CHOICE, GET_PATRONYMIC, GET_FULL_NAME = range(8, 11)
+GET_PHONE, GET_PASSPORT, GET_BIRTHDATE, GET_PAYMENT_ACCEPT, GET_USER_CHOICE = range(11, 16)
 
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -37,29 +39,7 @@ def start(update, context):
         )
         return GET_USER_CHOICE
     else:
-        # replace with get from db
-        addresses = [
-            'Рязанский пр., 16 строение 4',
-            'ул. Наташи Ковшовой, 2',
-            'Люблинская ул., 60 корпус 2',
-            'Походный пр-д, 6'
-        ]
-
-        addresses_buttons = [
-            KeyboardButton(address) for address in addresses
-        ]
-
-        keyboard = build_menu(addresses_buttons, n_cols=2)
-    
-        reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-    
-        update.message.reply_text(
-            'Привет, я бот компании SafeStorage, который поможет вам оставить вещи в ячейке хранения.'
-            'Выберите адрес, чтобы перейти к получения кода доступа к ячейке',
-            reply_markup=reply_markup
-        )
-    
-        return GET_ADDRESS
+        return get_address_type(update, context)
 
 
 def get_things_type(update, context):
@@ -524,13 +504,21 @@ if __name__ == '__main__':
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start), MessageHandler(Filters.regex('^Начать$'), start)],
         states={
+            GET_ADDRESS_TYPE: [
+                MessageHandler(Filters.regex('^Да, подскажите$'), get_user_location),
+                MessageHandler(Filters.regex('^Нет, выберу сам$'), get_address),
+            ],
+            GET_USER_LOCATION: [
+                MessageHandler(Filters.text, get_address_with_location),
+                MessageHandler(Filters.location, get_address_with_location)
+            ],
             GET_ADDRESS: [
                 MessageHandler(Filters.text, get_things_type)
             ],
             GET_THINGS_TYPE: [
                 MessageHandler(Filters.regex('^Другое$'), get_other_things_area),
                 MessageHandler(Filters.regex('^Сезонные вещи$'), get_seasoned_things_type),
-                MessageHandler(Filters.regex('^Назад ⬅$'), start)
+                MessageHandler(Filters.regex('^Назад ⬅$'), get_address)
             ],
             # ветка других вещей
             GET_OTHER_THINGS_AREA: [
