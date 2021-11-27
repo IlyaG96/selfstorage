@@ -204,6 +204,25 @@ def add_prices():
     conn.commit()
 
 
+def add_warehouses():
+    conn = create_connection(selfstorage)
+    sql = ''' INSERT INTO warehouses(id, address, short_name, latitude, longitude)
+              VALUES(?,?,?,?,?) '''
+    cur = conn.cursor()
+
+    warehouses = [
+        [1, 'Рязанский пр., 16 строение 4', 'Рязань', 55.723217, 37.76623],
+        [2, 'ул. Наташи Ковшовой, 2', 'Наташа', 55.683941000000004, 37.454796513441636],
+        [3, 'Люблинская ул., 60 корпус 2', 'Люблино', 55.672881849999996, 37.737601749999996],
+        [4, 'Походный пр-д, 6', 'Поход', 55.7520514, 37.5669518],
+    ]
+
+    for warehouse in warehouses:
+        cur.execute(sql, warehouse)
+
+    conn.commit()
+
+
 def get_seasoned_things():
     conn = create_connection(selfstorage)
     cur = conn.cursor()
@@ -213,6 +232,28 @@ def get_seasoned_things():
     things = [row[0] for row in rows]
 
     return things
+
+
+def get_warehouses_with_short_name():
+    conn = create_connection(selfstorage)
+    cur = conn.cursor()
+    cur.execute("SELECT address, short_name FROM warehouses")
+    rows = cur.fetchall()
+
+    warehouses = dict()
+    for row in rows:
+        warehouses[row[0]] = row[1]
+
+    return warehouses
+
+
+def get_warehouse_coords_by_address(warehouse_address):
+    conn = create_connection(selfstorage)
+    cur = conn.cursor()
+    cur.execute("SELECT latitude, longitude FROM warehouses WHERE address = ?", [warehouse_address])
+    row = cur.fetchone()
+
+    return row[0], row[1]
 
 
 def get_seasoned_prices():

@@ -1,13 +1,19 @@
+from geopy import Photon
+from geopy.distance import distance
 from telegram import KeyboardButton, ReplyKeyboardMarkup
 from bot_helpers import build_menu
+from db_helpers import get_warehouses_with_short_name, get_warehouse_coords_by_address
+
+GET_ADDRESS, GET_ADDRESS_TYPE, GET_USER_LOCATION, GET_ADDRESS_WITH_LOCATION = range(30, 34)
 
 
-GET_ADDRESS, GET_ADDRESS_TYPE, GET_USER_LOCATION = range(30, 33)
-
-
-def get_distance(place1, place2, /):
-    distance = None
-    return distance
+def get_location_by_address(address):
+    geocoder = Photon()
+    result = geocoder.geocode(address)
+    if result:
+        return result.latitude, result.longitude
+    else:
+        return None
 
 
 def get_address_type(update, _):
@@ -28,54 +34,61 @@ def get_address_type(update, _):
 
 
 def get_address(update, _):
-    # replace with get from db
-    addresses = [
-        'Рязанский пр., 16 строение 4',
-        'ул. Наташи Ковшовой, 2',
-        'Люблинская ул., 60 корпус 2',
-        'Походный пр-д, 6'
-    ]
+    addresses = get_warehouses_with_short_name()
 
     addresses_buttons = [
-        KeyboardButton(address) for address in addresses
+        KeyboardButton(short_name) for address, short_name in addresses.items()
     ]
 
-    keyboard = build_menu(addresses_buttons, n_cols=2)
+    keyboard = build_menu(addresses_buttons, n_cols=2, footer_buttons=[KeyboardButton('Назад ⬅')])
 
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
 
+    text = 'Выберите адрес склада\n'
+
+    for address, short_name in addresses.items():
+        text += f'{short_name} - {address}\n'
+
     update.message.reply_text(
-        'Выберите адрес склада',
+        text,
         reply_markup=reply_markup
     )
     return GET_ADDRESS
 
 
 def get_address_with_location(update, _):
+    if update.message.location:
+        user_location = (
+            update.message.location['latitude'], update.message.location['longitude']
+        )
+    else:
+        user_location = get_location_by_address(update.message.text)
+        if not user_location:
+            update.message.reply_text(
+                'Адрес некорректен. Проверьте то что вы ввели, или отправьте гео-точку'
+            )
+            return GET_USER_LOCATION
 
+    addresses_with_shortnames = get_warehouses_with_short_name()
 
-    # replace with get from db
-    addresses = [
-        'Рязанский пр., 16 строение 4',
-        'ул. Наташи Ковшовой, 2',
-        'Люблинская ул., 60 корпус 2',
-        'Походный пр-д, 6'
+    formatted_addresses = [
+        f'{shortname}\n({round(distance(user_location, get_warehouse_coords_by_address(address)).km)} км)'
+        for address, shortname in addresses_with_shortnames.items()
     ]
 
-    city = 'Москва'  # for future usage
+    addresses_buttons = [KeyboardButton(address) for address in formatted_addresses]
 
-    prefixed_addresses = [f'Россия, {city}, {address}' for address in addresses]
-
-    addresses_buttons = [
-        KeyboardButton(address) for address in addresses
-    ]
-
-    keyboard = build_menu(addresses_buttons, n_cols=2)
+    keyboard = build_menu(addresses_buttons, n_cols=2, footer_buttons=[KeyboardButton('Назад ⬅')])
 
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
 
+    text = 'Выберите адрес склада\n'
+
+    for address, short_name in addresses_with_shortnames.items():
+        text += f'{short_name} - {address}\n'
+
     update.message.reply_text(
-        'Выберите адрес склада',
+        text,
         reply_markup=reply_markup
     )
     return GET_ADDRESS

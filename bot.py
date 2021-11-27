@@ -6,12 +6,13 @@ from telegram import KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import Updater, CommandHandler, ConversationHandler, MessageHandler, Filters, PreCheckoutQueryHandler
 from environs import Env
 
-from addresses import get_address, get_address_type, get_user_location, GET_ADDRESS, GET_ADDRESS_TYPE, \
-    GET_USER_LOCATION, get_address_with_location
+from addresses import get_address, get_address_type, get_user_location, get_address_with_location, \
+    GET_ADDRESS, GET_ADDRESS_TYPE, GET_USER_LOCATION, GET_ADDRESS_WITH_LOCATION
 from bot_helpers import build_menu, check_age
 from words_declension import num_with_week, num_with_month, num_with_ruble
 from db_helpers import add_user, get_user, get_code, create_db, selfstorage, add_prices, add_reservation, \
-    get_reservations, get_other_prices, get_seasoned_prices, get_seasoned_things
+    get_reservations, get_other_prices, get_seasoned_prices, get_seasoned_things, add_warehouses, \
+    get_warehouses_with_short_name
 from payments import take_payment, count_price, precheckout, PRECHECKOUT, SUCCESS_PAYMENT, TAKE_PAYMENT
 
 GET_ACCEPT, GET_THINGS_TYPE, GET_OTHER_THINGS_AREA, GET_THINGS_CONFIRMATION, GET_PERSONAL_DATA = range(5)
@@ -44,15 +45,10 @@ def start(update, context):
 
 def get_things_type(update, context):
     if update.message.text != 'Назад ⬅':
-        # replace with get from db
-        addresses = [
-            'Рязанский пр., 16 строение 4',
-            'ул. Наташи Ковшовой, 2',
-            'Люблинская ул., 60 корпус 2',
-            'Походный пр-д, 6'
-        ]
+        addresses = get_warehouses_with_short_name()
+        short_names = tuple(addresses.values())
 
-        if update.message.text in addresses:
+        if update.message.text.startswith(short_names):
             context.user_data['warehouse_id'] = update.message.text
         else:
             return GET_ADDRESS
@@ -500,6 +496,7 @@ if __name__ == '__main__':
     if not Path(selfstorage).is_file():
         create_db()
         add_prices()
+        add_warehouses()
 
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start), MessageHandler(Filters.regex('^Начать$'), start)],
@@ -509,10 +506,15 @@ if __name__ == '__main__':
                 MessageHandler(Filters.regex('^Нет, выберу сам$'), get_address),
             ],
             GET_USER_LOCATION: [
+                MessageHandler(Filters.regex('^Назад ⬅$'), start),
                 MessageHandler(Filters.text, get_address_with_location),
                 MessageHandler(Filters.location, get_address_with_location)
             ],
             GET_ADDRESS: [
+                MessageHandler(Filters.regex('^Назад ⬅$'), start),
+                MessageHandler(Filters.text, get_things_type)
+            ],
+            GET_ADDRESS_WITH_LOCATION: [
                 MessageHandler(Filters.text, get_things_type)
             ],
             GET_THINGS_TYPE: [
