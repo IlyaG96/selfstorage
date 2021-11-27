@@ -48,8 +48,10 @@ def get_things_type(update, context):
         addresses = get_warehouses_with_short_name()
         short_names = tuple(addresses.values())
 
-        if update.message.text.startswith(short_names):
-            context.user_data['warehouse_id'] = get_warehouse_id_by_short_name(update.message.text)
+        for short_name in short_names:
+            if update.message.text.startswith(short_name):
+                context.user_data['warehouse_id'] = get_warehouse_id_by_short_name(short_name)
+                break
         else:
             return GET_ADDRESS
 

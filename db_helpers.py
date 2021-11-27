@@ -259,7 +259,7 @@ def get_warehouse_coords_by_address(warehouse_address):
 def get_warehouse_id_by_short_name(warehouse_short_name):
     conn = create_connection(selfstorage)
     cur = conn.cursor()
-    cur.execute("SELECT id FROM warehouses WHERE address = ?", [warehouse_short_name])
+    cur.execute("SELECT id FROM warehouses WHERE short_name = ?", [warehouse_short_name])
     row = cur.fetchone()
 
     return row[0]
