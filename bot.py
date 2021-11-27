@@ -324,6 +324,7 @@ def name_from_contact(update, _):
     if first_name and last_name:
         reply_keyboard = [
             ['Добавить отчество', 'Ввести ФИО'],
+            ['Пропустить'],
         ]
         update.message.reply_text(
             f'Фамилия и имя взятые из вашего профиля:\n'
@@ -363,14 +364,20 @@ def full_name(update, _):
 
 
 def phone(update, context):
-    message_parts = update.message.text.split()
-    if len(message_parts) == 3:
-        last_name, first_name, patronymic = message_parts
-        context.user_data['last_name'] = last_name
-        context.user_data['first_name'] = first_name
-        context.user_data['patronymic'] = patronymic
+    if update.message.text == 'Пропустить':
+        user = update.message.from_user
+        context.user_data['first_name'] = user.first_name
+        context.user_data['last_name'] = user.last_name
+        context.user_data['patronymic'] = None
     else:
-        context.user_data['patronymic'] = update.message.text
+        message_parts = update.message.text.split()
+        if len(message_parts) == 3:
+            last_name, first_name, patronymic = message_parts
+            context.user_data['last_name'] = last_name
+            context.user_data['first_name'] = first_name
+            context.user_data['patronymic'] = patronymic
+        else:
+            context.user_data['patronymic'] = update.message.text
     
     phone_request_button = KeyboardButton('Передать контакт', request_contact=True)
     update.message.reply_text(
@@ -611,6 +618,7 @@ if __name__ == '__main__':
             GET_NAME_INPUT_CHOICE: [
                 MessageHandler(Filters.regex('^Добавить отчество$'), patronymic),
                 MessageHandler(Filters.regex('^Ввести ФИО$'), full_name),
+                MessageHandler(Filters.regex('^Пропустить$'), phone)
             ],
             GET_PATRONYMIC: [
                 MessageHandler(Filters.regex('^[а-яА-Я]{6,20}$'), phone),
