@@ -18,7 +18,7 @@ from payments import take_payment, count_price, precheckout, PRECHECKOUT, SUCCES
 GET_ACCEPT, GET_THINGS_TYPE, GET_OTHER_THINGS_AREA, GET_THINGS_CONFIRMATION, GET_PERSONAL_DATA = range(5)
 GET_SEASONED_THINGS_TYPE, GET_SEASONED_THINGS_COUNT, GET_SEASONED_THINGS_TIME_TYPE = range(5, 8)
 GET_NAME_INPUT_CHOICE, GET_PATRONYMIC, GET_FULL_NAME = range(8, 11)
-GET_PHONE, GET_PASSPORT, GET_BIRTHDATE, GET_PAYMENT_ACCEPT, GET_USER_CHOICE = range(11, 16)
+GET_PHONE, GET_PASSPORT, GET_BIRTHDATE, GET_PAYMENT_ACCEPT, GET_USER_CHOICE, GET_SHOW_THINGS_CHOICE = range(11, 17)
 
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -265,24 +265,38 @@ def get_things_confirmation(update, context):
     return GET_PERSONAL_DATA
 
 
-def get_agreement_accept(update, _):
-    keyboard = [
-        [
-            KeyboardButton('Принимаю'),
-            KeyboardButton('Отказываюсь')
+def get_agreement_accept(update, context):
+    user = get_user(update.message.from_user.id)
+    if user:
+        total_price = count_price(update, context)
+        context.user_data['cost'] = total_price
+    
+        update.message.reply_text(
+            f'Стоимость бронирования: {total_price} руб.',
+            reply_markup=ReplyKeyboardMarkup(
+                [['Оплатить']],
+                resize_keyboard=True,
+            ),
+        )
+        return TAKE_PAYMENT
+    else:
+        keyboard = [
+            [
+                KeyboardButton('Принимаю'),
+                KeyboardButton('Отказываюсь')
+            ]
         ]
-    ]
-
-    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-
-    update.message.reply_text(
-        'Примите соглашение об обработке персональных данных',
-        reply_markup=reply_markup
-    )
-    with open('pd_processing_agreement.pdf', 'rb') as pd_file:
-        update.message.reply_document(pd_file)
-
-    return GET_ACCEPT
+    
+        reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+    
+        update.message.reply_text(
+            'Примите соглашение об обработке персональных данных',
+            reply_markup=reply_markup
+        )
+        with open('pd_processing_agreement.pdf', 'rb') as pd_file:
+            update.message.reply_document(pd_file)
+    
+        return GET_ACCEPT
 
 
 def accept_failure(update, _):
@@ -408,6 +422,7 @@ def correct_birthdate(update, context):
             add_user(context.user_data)
     
         total_price = count_price(update, context)
+        context.user_data['cost'] = total_price
     
         update.message.reply_text(
             f'Стоимость бронирования: {total_price} руб.',
@@ -430,31 +445,67 @@ def incorrect_birthdate(update, _):
 
 
 def success_payment(update, context):
-    add_reservation(context.user_data)
+    reply_keyboard = [['Забронировать место', 'Вещи на хранении']]
+    key,start,end = add_reservation(context.user_data)
     update.message.reply_text(
-        'Будем считать, что оплата прошла )\n'
-        'Ваш код для доступа в хранилище:',
-        reply_markup=ReplyKeyboardRemove(),
+        'Оплата принята. Спасибо за бронирование!\n'
+        'Вот ваш электронный ключ для доступа к вашему личному складу.\n'
+        f'Вы сможете попасть на склад в любое время в период с {start} по {end}',
+        reply_markup=ReplyKeyboardMarkup(
+            reply_keyboard,
+            resize_keyboard=True),
     )
-    code_path = get_code(context.user_data)
+    code_path = get_code(key)
     with open(code_path, 'rb') as code:
         update.message.reply_photo(code)
+    
+    return GET_USER_CHOICE
 
 
 def show_things(update, context):
-    things = get_reservations(context.user_data['user_id'])
-
-    if things:
-        update.message.reply_text('Вещи на хранении:')
-        update.message.reply_text(
-                things[0],
-                reply_markup=ReplyKeyboardRemove(),
-            )
+    context.user_data['things'] = get_reservations(context.user_data['user_id'])
+    if len(context.user_data['things']) > 1:
+        reply_keyboard = [['Показать другую ячейку'], ['Забронировать место']]
     else:
+        reply_keyboard = [['Забронировать место']]
+
+    if context.user_data['things']:
+        thing = context.user_data['things'].pop()
         update.message.reply_text(
-            'У вас нет вещей на хранении',
-            reply_markup=ReplyKeyboardRemove(),
+                thing[0] + '\n QR-код:',
+                reply_markup=ReplyKeyboardMarkup(
+                    reply_keyboard,
+                    resize_keyboard=True,
+                ),
+            )
+        code_path = get_code(thing[1])
+        with open(code_path, 'rb') as code:
+            update.message.reply_photo(code)
+        
+        return GET_SHOW_THINGS_CHOICE
+    else:
+        update.message.reply_text('У вас нет вещей на хранении')
+
+
+def show_next_thing(update, context):
+    if len(context.user_data['things']) > 1:
+        reply_keyboard = [['Показать другую ячейку'], ['Забронировать место']]
+    else:
+        reply_keyboard = [['Забронировать место']]
+    
+    thing = context.user_data['things'].pop()
+    update.message.reply_text(
+            thing[0] + '\n QR-код:',
+            reply_markup=ReplyKeyboardMarkup(
+                reply_keyboard,
+                resize_keyboard=True,
+            ),
         )
+    code_path = get_code(thing[1])
+    with open(code_path, 'rb') as code:
+        update.message.reply_photo(code)
+    
+    return GET_SHOW_THINGS_CHOICE
 
 
 def tmp_reply(update, _):
@@ -599,7 +650,11 @@ if __name__ == '__main__':
             ],
             GET_USER_CHOICE: [
                 MessageHandler(Filters.regex('^Вещи на хранении$'), show_things),
-                MessageHandler(Filters.regex('^Забронировать место$'), tmp_reply),
+                MessageHandler(Filters.regex('^Забронировать место$'), get_address_type),
+            ],
+            GET_SHOW_THINGS_CHOICE: [
+                MessageHandler(Filters.regex('^Забронировать место$'), get_address_type),
+                MessageHandler(Filters.regex('^Показать другую ячейку$'), show_next_thing),
             ],
         },
         fallbacks=[CommandHandler('start', start), MessageHandler(Filters.regex('^Начать$'), start)],
