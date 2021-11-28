@@ -1,10 +1,12 @@
 from telegram import KeyboardButton, ReplyKeyboardMarkup
 from db_helpers import get_entity_price
 from bot_helpers import build_menu
+from words_declension import num_with_month, num_with_ruble
+from payments import count_price
+import re
 
-GET_ENTITY_ORDER, GET_ENTITY_COUNT = range(40, 42)
-GET_THINGS_CONFIRMATION = 4
-
+GET_ENTITY_ORDER, GET_ENTITY_COUNT, ENTITY_ORDER_CONFIRMATION = range(40, 43)
+GET_PERSONAL_DATA = 4
 
 def entity_greetings(update, context):
 
@@ -21,7 +23,7 @@ def entity_greetings(update, context):
 
     update.message.reply_text(
         'Наша компания готова предоставить Вашей организации следующие услуги:\n'
-        'Аренда стеллажей для харнения документов',
+        'Аренда стеллажей для хранения документов',
         reply_markup=reply_markup
     )
 
@@ -29,6 +31,7 @@ def entity_greetings(update, context):
 
 
 def entity_count(update, context):
+
     if update.message.text != 'Назад ⬅':
         context.user_data['supertype'] = update.message.text
 
@@ -66,8 +69,32 @@ def entity_order(update, context):
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
 
     update.message.reply_text(
-        'Выберите на строк аренды',
+        'Выберите срок аренды:',
         reply_markup=reply_markup
     )
 
-    return GET_THINGS_CONFIRMATION
+    return ENTITY_ORDER_CONFIRMATION
+
+
+def entity_order_confirmation(update, context):
+
+    keyboard = [
+        [KeyboardButton('Подтвердить'), KeyboardButton('Назад ⬅')]
+    ]
+
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+
+    user_data = context.user_data
+
+    time = int(update.message.text.split(" ")[0])
+    user_data['entity_time'] = time
+
+    update.message.reply_text(
+        f'Ваш заказ: \n'
+        f'Тип: {user_data["supertype"]}\n'
+        f'Время хранения: {num_with_month(time)}\n'
+        f'Итоговая цена: {num_with_ruble(count_price(update, context))}',
+        reply_markup=reply_markup
+    )
+
+    return GET_PERSONAL_DATA

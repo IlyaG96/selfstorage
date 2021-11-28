@@ -14,7 +14,8 @@ from db_helpers import add_user, get_user, get_code, create_db, selfstorage, add
     get_reservations, get_other_prices, get_seasoned_prices, get_seasoned_things, add_warehouses, \
     get_warehouses_with_short_name, get_warehouse_id_by_short_name
 from payments import take_payment, count_price, precheckout, PRECHECKOUT, SUCCESS_PAYMENT, TAKE_PAYMENT
-from entity_services import entity_greetings, entity_order, entity_count, GET_ENTITY_ORDER, GET_ENTITY_COUNT
+from entity_services import entity_greetings, entity_order, entity_count, entity_order_confirmation,\
+    GET_ENTITY_ORDER, GET_ENTITY_COUNT, ENTITY_ORDER_CONFIRMATION
 GET_ACCEPT, GET_THINGS_TYPE, GET_OTHER_THINGS_AREA, GET_THINGS_CONFIRMATION, GET_PERSONAL_DATA = range(5)
 GET_SEASONED_THINGS_TYPE, GET_SEASONED_THINGS_COUNT, GET_SEASONED_THINGS_TIME_TYPE = range(5, 8)
 GET_NAME_INPUT_CHOICE, GET_PATRONYMIC, GET_FULL_NAME = range(8, 11)
@@ -225,7 +226,6 @@ def get_seasoned_things_time(update, context):
 
 
 def get_things_confirmation(update, context):
-    print("here")
     keyboard = [
         [KeyboardButton('Подтвердить'), KeyboardButton('Назад ⬅')]
     ]
@@ -260,21 +260,6 @@ def get_things_confirmation(update, context):
             f'Тип: {user_data["seasoned_type"]}\n'
             f'Количество: {user_data["seasoned_count"]}\n'
             f'Время хранения: {num_with_week(time) if time_type == "week" else num_with_month(time)}\n'
-            f'Итоговая цена: {num_with_ruble(count_price(update, context))}',
-            reply_markup=reply_markup
-        )
-
-    elif user_data['supertype'] == 'Услуги для юридических лиц':
-        print("herer2")
-        if 'мес' in update.message.text:
-            time = int(re.match(r'^(\d) мес\.\n\(\d{2,5} руб\.\)$', update.message.text).groups()[0])
-
-        user_data['entity_time'] = time
-
-        update.message.reply_text(
-            f'Ваш заказ: \n'
-            f'Тип: {user_data["supertype"]}\n'
-            f'Время хранения: {num_with_month(time)}\n'
             f'Итоговая цена: {num_with_ruble(count_price(update, context))}',
             reply_markup=reply_markup
         )
@@ -618,21 +603,24 @@ if __name__ == '__main__':
                 MessageHandler(Filters.regex(r'Недели'), get_seasoned_things_time),
                 MessageHandler(Filters.regex('^Назад ⬅$'), get_seasoned_things_count)
             ],
-            GET_THINGS_CONFIRMATION: [
-                MessageHandler(Filters.regex(r'^\d{1,2} мес.$'), get_things_confirmation),
-                MessageHandler(Filters.regex(r'^\d недел(я|и)$'), get_things_confirmation),
-                MessageHandler(Filters.regex(r'^\d нед\.\n\(\d{2,5} руб\.\)$'), get_things_confirmation),
-                MessageHandler(Filters.regex(r'^\d мес\.\n\(\d{2,5} руб\.\)$'), get_things_confirmation),
-                MessageHandler(Filters.regex('^Назад ⬅$'), get_things_confirmation_back)
-            ],
             # ветка услуг для юр. лиц
             GET_ENTITY_COUNT: [
                 MessageHandler(Filters.regex('^Назад ⬅$'), get_things_type),
                 MessageHandler(Filters.text, entity_count)
-            ],
+                          ],
             GET_ENTITY_ORDER: [
                 MessageHandler(Filters.regex('^Назад ⬅$'), entity_count),
                 MessageHandler(Filters.text, entity_order)
+                ],
+            ENTITY_ORDER_CONFIRMATION: [
+                MessageHandler(Filters.text, entity_order_confirmation)
+            ],
+            GET_THINGS_CONFIRMATION: [
+                MessageHandler(Filters.regex(r'^\d{1,2} мес.$'), get_things_confirmation),
+                MessageHandler(Filters.regex(r'^\d недел(я|и)$'), get_things_confirmation),
+                MessageHandler(Filters.regex(r'^\d нед\.\n\(\d{2,5} руб\.\)$'), get_things_confirmation),
+                MessageHandler(Filters.regex(r'^\d мес\.\n\(\d{2,6} руб\.\)$'), get_things_confirmation),
+                MessageHandler(Filters.regex('^Назад ⬅$'), get_things_confirmation_back)
             ],
             GET_ACCEPT: [
                 MessageHandler(Filters.regex('^Принимаю$'), name_from_contact),
