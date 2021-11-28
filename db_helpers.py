@@ -138,10 +138,17 @@ def add_reservation(context_data):
         else:
             period_in_weeks = context_data['seasoned_time'] * 4
         reservation_end = reservation_start + timedelta(weeks=period_in_weeks)
+
     elif context_data['supertype'] == 'Другое':
         thing_type = 'Площадь'
         count = context_data['other_area']
         period_in_weeks = context_data['other_time'] * 4
+        reservation_end = reservation_start + timedelta(weeks=period_in_weeks)
+
+    else:
+        thing_type = 'Стеллаж для хранения документов'
+        count = context_data['entity_rack_count']
+        period_in_weeks = context_data['entity_rack_count'] * 4
         reservation_end = reservation_start + timedelta(weeks=period_in_weeks)
 
     end = reservation_end.strftime("%d.%m.%Y")    

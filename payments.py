@@ -1,6 +1,7 @@
 from telegram import LabeledPrice, ReplyKeyboardRemove
 from environs import Env
 from db_helpers import get_other_prices, get_seasoned_prices, get_entity_price
+from words_declension import num_with_ruble
 
 TAKE_PAYMENT, PRECHECKOUT, SUCCESS_PAYMENT = range(20, 23)
 
@@ -16,7 +17,7 @@ def take_payment(update, context):
     sb_token = env('SB_TOKEN')
     chat_id = update.message.chat_id
     title = "Ваш заказ"
-    description = "Оплата ячейки хранения"
+    description = f"Оплата вашего заказа стоимостью {num_with_ruble(price)}"
     payload = "Custom-Payload"
 
     provider_token = sb_token
@@ -32,9 +33,7 @@ def take_payment(update, context):
 
 def precheckout(update, _):
     query = update.pre_checkout_query
-    # check the payload, is this from your bot?
     if query.invoice_payload != 'Custom-Payload':
-        # answer False pre_checkout_query
         query.answer(ok=False, error_message="Что-то пошло не так...")
     else:
         query.answer(ok=True)
@@ -68,6 +67,7 @@ def count_price(update, context):
     else:
         rack_price = get_entity_price()
         time = user_data['entity_time']
-        price = rack_price*time
+        count = user_data['entity_rack_count']
+        price = rack_price*time*count
 
         return price

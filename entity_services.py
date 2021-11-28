@@ -3,10 +3,10 @@ from db_helpers import get_entity_price
 from bot_helpers import build_menu
 from words_declension import num_with_month, num_with_ruble
 from payments import count_price
-import re
 
 GET_ENTITY_ORDER, GET_ENTITY_COUNT, ENTITY_ORDER_CONFIRMATION = range(40, 43)
 GET_PERSONAL_DATA = 4
+
 
 def entity_greetings(update, context):
 

@@ -70,7 +70,7 @@ def get_things_type(update, context):
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
 
     update.message.reply_text(
-        'Теперь выберите, пожалуйста, тип вещей для хранения',
+        'Теперь выберите, пожалуйста, тип вещей для хранения или тип услуг',
         reply_markup=reply_markup
     )
 
@@ -92,7 +92,7 @@ def get_other_things_area(update, context):
     reply_markup = ReplyKeyboardMarkup(things_areas_menu, resize_keyboard=True)
 
     update.message.reply_text(
-        'Выберите площадь необходимую для хранения ваших вещей',
+        'Выберите площадь, необходимую для хранения ваших вещей',
         reply_markup=reply_markup
     )
 
