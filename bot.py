@@ -14,7 +14,7 @@ from db_helpers import add_user, get_user, get_code, create_db, selfstorage, add
     get_reservations, get_other_prices, get_seasoned_prices, get_seasoned_things, add_warehouses, \
     get_warehouses_with_short_name, get_warehouse_id_by_short_name
 from payments import take_payment, count_price, precheckout, PRECHECKOUT, SUCCESS_PAYMENT, TAKE_PAYMENT
-
+from entity_services import entity_greetings, entity_order, GET_ENTITY_ORDER,GET_ENTITY_CONFIRMATION
 GET_ACCEPT, GET_THINGS_TYPE, GET_OTHER_THINGS_AREA, GET_THINGS_CONFIRMATION, GET_PERSONAL_DATA = range(5)
 GET_SEASONED_THINGS_TYPE, GET_SEASONED_THINGS_COUNT, GET_SEASONED_THINGS_TIME_TYPE = range(5, 8)
 GET_NAME_INPUT_CHOICE, GET_PATRONYMIC, GET_FULL_NAME = range(8, 11)
@@ -58,7 +58,8 @@ def get_things_type(update, context):
     keyboard = [
         [
             KeyboardButton('Сезонные вещи'),
-            KeyboardButton('Другое')
+            KeyboardButton('Другое'),
+            KeyboardButton('Для юридических лиц')
         ],
         [
             KeyboardButton('Назад ⬅')
@@ -577,6 +578,7 @@ if __name__ == '__main__':
             GET_THINGS_TYPE: [
                 MessageHandler(Filters.regex('^Другое$'), get_other_things_area),
                 MessageHandler(Filters.regex('^Сезонные вещи$'), get_seasoned_things_type),
+                MessageHandler(Filters.regex('^Для юридических лиц$'), entity_greetings),
                 MessageHandler(Filters.regex('^Назад ⬅$'), get_things_type_back)
             ],
             # ветка других вещей
@@ -606,6 +608,13 @@ if __name__ == '__main__':
                 MessageHandler(Filters.regex(r'^\d нед\.\n\(\d{2,5} руб\.\)$'), get_things_confirmation),
                 MessageHandler(Filters.regex(r'^\d мес\.\n\(\d{2,5} руб\.\)$'), get_things_confirmation),
                 MessageHandler(Filters.regex('^Назад ⬅$'), get_things_confirmation_back)
+            ],
+            # ветка услуг для юр. лиц
+            GET_ENTITY_ORDER: [
+                MessageHandler(Filters.text, entity_order)
+            ],
+            GET_ENTITY_CONFIRMATION: [
+
             ],
             GET_ACCEPT: [
                 MessageHandler(Filters.regex('^Принимаю$'), name_from_contact),

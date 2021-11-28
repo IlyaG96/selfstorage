@@ -207,6 +207,7 @@ def add_prices():
     cur.execute(sql, ('Колеса', 'Сезонные вещи', 13, 50, None))
     cur.execute(sql, ('Велосипед', 'Сезонные вещи', 150, 400, None))
     cur.execute(sql, ('Площадь', 'Другое', None, 599, 150))
+    cur.execute(sql, ('Аренда стеллажа', 'Для юридических лиц', None, 890, None))
     
     conn.commit()
 
@@ -294,3 +295,14 @@ def get_other_prices():
     price = (row[0], row[1])
 
     return price
+
+
+def get_entity_price():
+    conn = create_connection(selfstorage)
+    cur = conn.cursor()
+    cur.execute("SELECT cost_per_month FROM prices WHERE supertype=?", ('Для юридических лиц',))
+    row = cur.fetchone()
+    price = (row[0])
+
+    return price
+
