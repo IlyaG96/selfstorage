@@ -214,7 +214,7 @@ def add_prices():
     cur.execute(sql, ('Колеса', 'Сезонные вещи', 13, 50, None))
     cur.execute(sql, ('Велосипед', 'Сезонные вещи', 150, 400, None))
     cur.execute(sql, ('Площадь', 'Другое', None, 599, 150))
-    cur.execute(sql, ('Аренда стеллажа', 'Услуги для юридических лиц', None, 890, None))
+    cur.execute(sql, ('Аренда стеллажа', 'Услуги для юридических лиц', None, 899, None))
     
     conn.commit()
 
