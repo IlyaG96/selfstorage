@@ -12,7 +12,7 @@ def entity_greetings(update, context):
 
     keyboard = [
         [
-            KeyboardButton('Аренда стеллажей для хранения документов (890 руб./мес.)'),
+            KeyboardButton('Аренда стеллажей для хранения документов (899 руб./мес.)'),
         ],
         [
             KeyboardButton('Назад ⬅')
