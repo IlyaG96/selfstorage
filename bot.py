@@ -529,13 +529,6 @@ def show_next_thing(update, context):
     return GET_SHOW_THINGS_CHOICE
 
 
-def tmp_reply(update, _):
-    update.message.reply_text(
-        'В разработке...',
-        reply_markup=ReplyKeyboardRemove()
-    )
-
-
 def get_things_confirmation_back(update, context):
     if context.user_data['supertype'] == 'Сезонные вещи':
         return get_seasoned_things_time_type(update, context)
@@ -557,6 +550,17 @@ def get_things_type_back(update, context):
         return get_address(update, context)
 
 
+def incorrect_input(update, context):
+    update.message.reply_text(
+        'Я вас не понимаю \U0001F61F\n\n'
+        'Пожалуйста, воспользуйтесь кнопками в нижнем меню.\n'
+        'Если они у вас не отображаются, просто нажмите на эту\n'
+        'кнопку в поле ввода:'
+    )
+    with open('pointer.jpeg', 'rb') as pointer_file:
+        update.message.reply_photo(pointer_file)
+
+
 if __name__ == '__main__':
     env = Env()
     env.read_env()
@@ -574,6 +578,7 @@ if __name__ == '__main__':
             GET_ADDRESS_TYPE: [
                 MessageHandler(Filters.regex('^Да, подскажите$'), get_user_location),
                 MessageHandler(Filters.regex('^Нет, выберу сам$'), get_address),
+                MessageHandler(Filters.text, incorrect_input),
             ],
             GET_USER_LOCATION: [
                 MessageHandler(Filters.regex('^Назад ⬅$'), start),
@@ -592,14 +597,16 @@ if __name__ == '__main__':
                 MessageHandler(Filters.regex('^Другое$'), get_other_things_area),
                 MessageHandler(Filters.regex('^Сезонные вещи$'), get_seasoned_things_type),
                 MessageHandler(Filters.regex('^Услуги для юридических лиц$'), entity_greetings),
-                MessageHandler(Filters.regex('^Назад ⬅$'), get_things_type_back)
+                MessageHandler(Filters.regex('^Назад ⬅$'), get_things_type_back),
+                MessageHandler(Filters.text, incorrect_input),
             ],
             # ветка других вещей
             GET_OTHER_THINGS_AREA: [
                 MessageHandler(
                     Filters.regex(r'^\d{1,2} м² за \d{3,4} руб./мес.$'), get_other_things_time
                 ),
-                MessageHandler(Filters.regex('^Назад ⬅$'), get_things_type)
+                MessageHandler(Filters.regex('^Назад ⬅$'), get_things_type),
+                MessageHandler(Filters.text, incorrect_input),
             ],
             # ветка сезонных вещей
             GET_SEASONED_THINGS_TYPE: [
@@ -608,12 +615,14 @@ if __name__ == '__main__':
             ],
             GET_SEASONED_THINGS_COUNT: [
                 MessageHandler(Filters.regex(r'^\d+$'), get_seasoned_things_time_type),
-                MessageHandler(Filters.regex('^Назад ⬅$'), get_seasoned_things_type)
+                MessageHandler(Filters.regex('^Назад ⬅$'), get_seasoned_things_type),
+                MessageHandler(Filters.text, incorrect_input),
             ],
             GET_SEASONED_THINGS_TIME_TYPE: [
                 MessageHandler(Filters.regex(r'Месяцы'), get_seasoned_things_time),
                 MessageHandler(Filters.regex(r'Недели'), get_seasoned_things_time),
-                MessageHandler(Filters.regex('^Назад ⬅$'), get_seasoned_things_count)
+                MessageHandler(Filters.regex('^Назад ⬅$'), get_seasoned_things_count),
+                MessageHandler(Filters.text, incorrect_input),
             ],
             # ветка услуг для юр. лиц
             GET_ENTITY_COUNT: [
@@ -632,28 +641,34 @@ if __name__ == '__main__':
                 MessageHandler(Filters.regex(r'^\d недел(я|и)$'), get_things_confirmation),
                 MessageHandler(Filters.regex(r'^\d нед\.\n\(\d{2,5} руб\.\)$'), get_things_confirmation),
                 MessageHandler(Filters.regex(r'^\d мес\.\n\(\d{2,6} руб\.\)$'), get_things_confirmation),
-                MessageHandler(Filters.regex('^Назад ⬅$'), get_things_confirmation_back)
+                MessageHandler(Filters.regex('^Назад ⬅$'), get_things_confirmation_back),
+                MessageHandler(Filters.text, incorrect_input),
             ],
             GET_ACCEPT: [
                 MessageHandler(Filters.regex('^Принимаю$'), name_from_contact),
                 MessageHandler(Filters.regex('^Отказываюсь$'), accept_failure),
+                MessageHandler(Filters.text, incorrect_input),
             ],
             GET_PERSONAL_DATA: [
                 MessageHandler(Filters.regex('^Подтвердить$'), get_promocode),
-                MessageHandler(Filters.regex('^Назад ⬅$'), get_personal_data_back)
+                MessageHandler(Filters.regex('^Назад ⬅$'), get_personal_data_back),
+                MessageHandler(Filters.text, incorrect_input),
             ],
             GET_NAME_INPUT_CHOICE: [
                 MessageHandler(Filters.regex('^Добавить отчество$'), patronymic),
                 MessageHandler(Filters.regex('^Ввести ФИО$'), full_name),
-                MessageHandler(Filters.regex('^Пропустить$'), phone)
+                MessageHandler(Filters.regex('^Пропустить$'), phone),
+                MessageHandler(Filters.text, incorrect_input),
             ],
             GET_PATRONYMIC: [
                 MessageHandler(Filters.regex('^[а-яА-Я]{6,20}$'), phone),
+                MessageHandler(Filters.text, incorrect_input),
             ],
             GET_FULL_NAME: [
                 MessageHandler(
                     Filters.regex(r'[а-яА-Я]{2,20}( )[а-яА-Я]{2,20}( )[а-яА-Я]{6,20}'),
-                    phone
+                    phone,
+                    MessageHandler(Filters.text, incorrect_input),
                 ),
             ],
             GET_PHONE: [
@@ -666,6 +681,7 @@ if __name__ == '__main__':
             ],
             GET_PASSPORT: [
                 MessageHandler(Filters.regex(r'^\d{4}( )?\d{6}$'), birthdate),
+                MessageHandler(Filters.text, incorrect_input),
             ],
             GET_BIRTHDATE: [
                 MessageHandler(
@@ -676,6 +692,7 @@ if __name__ == '__main__':
             ],
             TAKE_PAYMENT: [
                 MessageHandler(Filters.regex('^Оплатить$'), take_payment),
+                MessageHandler(Filters.text, incorrect_input),
             ],
             PRECHECKOUT: [
                 PreCheckoutQueryHandler(precheckout),
@@ -686,10 +703,12 @@ if __name__ == '__main__':
             GET_USER_CHOICE: [
                 MessageHandler(Filters.regex('^Вещи на хранении$'), show_things),
                 MessageHandler(Filters.regex('^Забронировать место$'), get_address_type),
+                MessageHandler(Filters.text, incorrect_input),
             ],
             GET_SHOW_THINGS_CHOICE: [
                 MessageHandler(Filters.regex('^Забронировать место$'), get_address_type),
                 MessageHandler(Filters.regex('^Показать другую ячейку$'), show_next_thing),
+                MessageHandler(Filters.text, incorrect_input),
             ],
             GET_PROMOCODE: [
                 MessageHandler(Filters.text, get_agreement_accept),
