@@ -59,7 +59,7 @@ def get_things_type(update, context):
         [
             KeyboardButton('Сезонные вещи'),
             KeyboardButton('Другое'),
-            KeyboardButton('Для юридических лиц')
+            KeyboardButton('Услуги для юридических лиц')
         ],
         [
             KeyboardButton('Назад ⬅')
@@ -225,6 +225,7 @@ def get_seasoned_things_time(update, context):
 
 
 def get_things_confirmation(update, context):
+    print("here")
     keyboard = [
         [KeyboardButton('Подтвердить'), KeyboardButton('Назад ⬅')]
     ]
@@ -259,6 +260,21 @@ def get_things_confirmation(update, context):
             f'Тип: {user_data["seasoned_type"]}\n'
             f'Количество: {user_data["seasoned_count"]}\n'
             f'Время хранения: {num_with_week(time) if time_type == "week" else num_with_month(time)}\n'
+            f'Итоговая цена: {num_with_ruble(count_price(update, context))}',
+            reply_markup=reply_markup
+        )
+
+    elif user_data['supertype'] == 'Услуги для юридических лиц':
+        print("herer2")
+        if 'мес' in update.message.text:
+            time = int(re.match(r'^(\d) мес\.\n\(\d{2,5} руб\.\)$', update.message.text).groups()[0])
+
+        user_data['entity_time'] = time
+
+        update.message.reply_text(
+            f'Ваш заказ: \n'
+            f'Тип: {user_data["supertype"]}\n'
+            f'Время хранения: {num_with_month(time)}\n'
             f'Итоговая цена: {num_with_ruble(count_price(update, context))}',
             reply_markup=reply_markup
         )
@@ -578,7 +594,7 @@ if __name__ == '__main__':
             GET_THINGS_TYPE: [
                 MessageHandler(Filters.regex('^Другое$'), get_other_things_area),
                 MessageHandler(Filters.regex('^Сезонные вещи$'), get_seasoned_things_type),
-                MessageHandler(Filters.regex('^Для юридических лиц$'), entity_greetings),
+                MessageHandler(Filters.regex('^Услуги для юридических лиц$'), entity_greetings),
                 MessageHandler(Filters.regex('^Назад ⬅$'), get_things_type_back)
             ],
             # ветка других вещей

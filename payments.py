@@ -1,6 +1,6 @@
 from telegram import LabeledPrice, ReplyKeyboardRemove
 from environs import Env
-from db_helpers import get_other_prices, get_seasoned_prices
+from db_helpers import get_other_prices, get_seasoned_prices, get_entity_price
 
 TAKE_PAYMENT, PRECHECKOUT, SUCCESS_PAYMENT = range(20, 23)
 
@@ -54,7 +54,7 @@ def count_price(update, context):
 
         return price
 
-    else:
+    elif user_data['supertype'] == 'Сезонные вещи':
         prices = get_seasoned_prices()
         time = user_data['seasoned_time']
         time_type = user_data['seasoned_time_type']
@@ -65,4 +65,9 @@ def count_price(update, context):
 
         return price
 
+    else:
+        rack_price = get_entity_price()
+        time = user_data['entity_time']
+        price = rack_price*time
 
+        return price
