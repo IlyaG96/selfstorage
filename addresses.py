@@ -2,7 +2,7 @@ from geopy import Photon
 from geopy.distance import distance
 from telegram import KeyboardButton, ReplyKeyboardMarkup
 from bot_helpers import build_menu
-from db_helpers import get_warehouses_with_short_name, get_warehouse_coords_by_address
+from db_helpers import get_warehouses_with_short_name, get_warehouse_coords_by_address, get_user
 
 GET_ADDRESS, GET_ADDRESS_TYPE, GET_USER_LOCATION, GET_ADDRESS_WITH_LOCATION = range(30, 34)
 
@@ -17,6 +17,12 @@ def get_location_by_address(address):
 
 
 def get_address_type(update, _):
+    user = get_user(update.message.from_user.id)
+    if user:
+        greeting = ''
+    else:
+        greeting = 'Привет, я бот компании SafeStorage, который поможет вам оставить вещи в ячейке хранения. '
+
     address_type_buttons = [
         [KeyboardButton('Да, подскажите'), KeyboardButton('Нет, выберу сам')]
     ]
@@ -24,7 +30,7 @@ def get_address_type(update, _):
     reply_markup = ReplyKeyboardMarkup(address_type_buttons, resize_keyboard=True)
 
     update.message.reply_text(
-        'Привет, я бот компании SafeStorage, который поможет вам оставить вещи в ячейке хранения. '
+        f'{greeting}'
         'Перед тем, как перейти к бронированию, вам нужно выбрать адрес склада для хранения. '
         'Определить расстояние от складов до вас?',
         reply_markup=reply_markup
