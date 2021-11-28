@@ -13,13 +13,13 @@ from words_declension import num_with_week, num_with_month, num_with_ruble
 from db_helpers import add_user, get_user, get_code, create_db, selfstorage, add_prices, add_reservation, \
     get_reservations, get_other_prices, get_seasoned_prices, get_seasoned_things, add_warehouses, \
     get_warehouses_with_short_name, get_warehouse_id_by_short_name
-from payments import take_payment, count_price, precheckout, PRECHECKOUT, SUCCESS_PAYMENT, TAKE_PAYMENT
+from payments import take_payment, count_price, precheckout, check_promocode, PRECHECKOUT, SUCCESS_PAYMENT, TAKE_PAYMENT
 from entity_services import entity_greetings, entity_order, entity_count, entity_order_confirmation,\
     GET_ENTITY_ORDER, GET_ENTITY_COUNT, ENTITY_ORDER_CONFIRMATION
 GET_ACCEPT, GET_THINGS_TYPE, GET_OTHER_THINGS_AREA, GET_THINGS_CONFIRMATION, GET_PERSONAL_DATA = range(5)
 GET_SEASONED_THINGS_TYPE, GET_SEASONED_THINGS_COUNT, GET_SEASONED_THINGS_TIME_TYPE = range(5, 8)
 GET_NAME_INPUT_CHOICE, GET_PATRONYMIC, GET_FULL_NAME = range(8, 11)
-GET_PHONE, GET_PASSPORT, GET_BIRTHDATE, GET_PAYMENT_ACCEPT, GET_USER_CHOICE, GET_SHOW_THINGS_CHOICE = range(11, 17)
+GET_PHONE, GET_PASSPORT, GET_BIRTHDATE, GET_PAYMENT_ACCEPT, GET_USER_CHOICE, GET_SHOW_THINGS_CHOICE, GET_PROMOCODE = range(11, 18)
 
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -267,14 +267,26 @@ def get_things_confirmation(update, context):
     return GET_PERSONAL_DATA
 
 
+def get_promocode(update, context):
+    update.message.reply_text(
+        'Введите промокод',
+        reply_markup=ReplyKeyboardMarkup(
+            [['Пропустить']],
+            resize_keyboard=True,
+        ),
+    )
+    return GET_PROMOCODE  
+
+
 def get_agreement_accept(update, context):
+    coefficient, message = check_promocode(update.message.text, context.user_data)
     user = get_user(update.message.from_user.id)
     if user:
-        total_price = count_price(update, context)
+        total_price = int(count_price(update, context) * coefficient)
         context.user_data['cost'] = total_price
     
         update.message.reply_text(
-            f'Стоимость бронирования: {total_price} руб.',
+            f'{message}Стоимость бронирования: {total_price} руб.',
             reply_markup=ReplyKeyboardMarkup(
                 [['Оплатить']],
                 resize_keyboard=True,
@@ -627,7 +639,7 @@ if __name__ == '__main__':
                 MessageHandler(Filters.regex('^Отказываюсь$'), accept_failure),
             ],
             GET_PERSONAL_DATA: [
-                MessageHandler(Filters.regex('^Подтвердить$'), get_agreement_accept),
+                MessageHandler(Filters.regex('^Подтвердить$'), get_promocode),
                 MessageHandler(Filters.regex('^Назад ⬅$'), get_personal_data_back)
             ],
             GET_NAME_INPUT_CHOICE: [
@@ -678,6 +690,9 @@ if __name__ == '__main__':
             GET_SHOW_THINGS_CHOICE: [
                 MessageHandler(Filters.regex('^Забронировать место$'), get_address_type),
                 MessageHandler(Filters.regex('^Показать другую ячейку$'), show_next_thing),
+            ],
+            GET_PROMOCODE: [
+                MessageHandler(Filters.text, get_agreement_accept),
             ],
         },
         fallbacks=[CommandHandler('start', start), MessageHandler(Filters.regex('^Начать$'), start)],
