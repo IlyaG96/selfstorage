@@ -14,7 +14,7 @@ from db_helpers import add_user, get_user, get_code, create_db, selfstorage, add
     get_reservations, get_other_prices, get_seasoned_prices, get_seasoned_things, add_warehouses, \
     get_warehouses_with_short_name, get_warehouse_id_by_short_name
 from payments import take_payment, count_price, precheckout, PRECHECKOUT, SUCCESS_PAYMENT, TAKE_PAYMENT
-from entity_services import entity_greetings, entity_order, GET_ENTITY_ORDER,GET_ENTITY_CONFIRMATION
+from entity_services import entity_greetings, entity_order, entity_count, GET_ENTITY_ORDER, GET_ENTITY_COUNT
 GET_ACCEPT, GET_THINGS_TYPE, GET_OTHER_THINGS_AREA, GET_THINGS_CONFIRMATION, GET_PERSONAL_DATA = range(5)
 GET_SEASONED_THINGS_TYPE, GET_SEASONED_THINGS_COUNT, GET_SEASONED_THINGS_TIME_TYPE = range(5, 8)
 GET_NAME_INPUT_CHOICE, GET_PATRONYMIC, GET_FULL_NAME = range(8, 11)
@@ -610,11 +610,13 @@ if __name__ == '__main__':
                 MessageHandler(Filters.regex('^Назад ⬅$'), get_things_confirmation_back)
             ],
             # ветка услуг для юр. лиц
-            GET_ENTITY_ORDER: [
-                MessageHandler(Filters.text, entity_order)
+            GET_ENTITY_COUNT: [
+                MessageHandler(Filters.regex('^Назад ⬅$'), get_things_type),
+                MessageHandler(Filters.text, entity_count)
             ],
-            GET_ENTITY_CONFIRMATION: [
-
+            GET_ENTITY_ORDER: [
+                MessageHandler(Filters.regex('^Назад ⬅$'), entity_count),
+                MessageHandler(Filters.text, entity_order)
             ],
             GET_ACCEPT: [
                 MessageHandler(Filters.regex('^Принимаю$'), name_from_contact),
