@@ -8,7 +8,7 @@ TAKE_PAYMENT, PRECHECKOUT, SUCCESS_PAYMENT = range(20, 23)
 
 def take_payment(update, context):
 
-    price = count_price(update, context)
+    price = context.user_data['cost']
 
     update.message.reply_text('Формирую счёт...', reply_markup=ReplyKeyboardRemove())
 
