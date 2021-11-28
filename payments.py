@@ -71,3 +71,49 @@ def count_price(update, context):
         price = rack_price*time*count
 
         return price
+
+
+def check_promocode(code, context_data):
+    coefficient = 1
+    message = ''
+    if code == 'storage20':
+        if context_data['supertype'] == 'Сезонные вещи':
+            time = context_data['seasoned_time']
+            if context_data['seasoned_time_type'] == 'month' and time >= 3:
+                coefficient = 0.8
+            else:
+                message = 'Промокод не может быть применён к данному заказу\n\n'
+        elif context_data['supertype'] == 'Другое':
+            if context_data['other_time'] >= 3:
+                coefficient = 0.8
+            else:
+                message = 'Промокод не может быть применён к данному заказу\n\n'
+        else:
+            if context_data['entity_time'] >= 3:
+                coefficient = 0.8
+            else:
+                message = 'Промокод не может быть применён к данному заказу\n\n'
+    elif code == 'storage15':
+        if context_data['supertype'] == 'Сезонные вещи':
+            time = context_data['seasoned_time']
+            if (context_data['seasoned_time_type'] == 'month' and time < 3 or
+                    context_data['seasoned_time_type'] == 'week'):
+                coefficient = 0.85
+            else:
+                message = 'Промокод не может быть применён к данному заказу\n\n'
+        elif context_data['supertype'] == 'Другое':
+            if context_data['other_time'] < 3:
+                coefficient = 0.85
+            else:
+                message = 'Промокод не может быть применён к данному заказу\n\n'
+        else:
+            if context_data['entity_time'] < 3:
+                coefficient = 0.85
+            else:
+                message = 'Промокод не может быть применён к данному заказу\n\n'
+    elif code == 'Пропустить':
+        pass
+    else:
+        message = 'Бот не смог распознать ваш промокод\n\n'                
+
+    return (coefficient, message)
