@@ -1,4 +1,4 @@
-from telegram import LabeledPrice
+from telegram import LabeledPrice, ReplyKeyboardRemove
 from environs import Env
 from db_helpers import get_other_prices, get_seasoned_prices
 
@@ -8,6 +8,8 @@ TAKE_PAYMENT, PRECHECKOUT, SUCCESS_PAYMENT = range(20, 23)
 def take_payment(update, context):
 
     price = count_price(update, context)
+
+    update.message.reply_text('Формирую счёт...', reply_markup=ReplyKeyboardRemove())
 
     env = Env()
     env.read_env()
