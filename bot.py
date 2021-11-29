@@ -556,6 +556,14 @@ def incorrect_input(update, context):
         update.message.reply_photo(pointer_file)
 
 
+def incorrect_fio(update, context):
+    update.message.reply_text(
+        'Я вас не понимаю \U0001F61F\n\n'
+        'Пожалуйста, введите имя в формате Фамилия Имя'
+        'или Фамилия Имя Отчество'
+    )
+
+
 if __name__ == '__main__':
     env = Env()
     env.read_env()
@@ -672,7 +680,7 @@ if __name__ == '__main__':
                     Filters.regex(r'[а-яА-Я]{2,20}( )[а-яА-Я]{2,20}'),
                     phone
                 ),
-                MessageHandler(Filters.text, incorrect_input),
+                MessageHandler(Filters.text, incorrect_fio),
             ],
             GET_PHONE: [
                 MessageHandler(Filters.contact, correct_phone),
