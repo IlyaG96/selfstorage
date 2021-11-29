@@ -668,6 +668,10 @@ if __name__ == '__main__':
                     Filters.regex(r'[а-яА-Я]{2,20}( )[а-яА-Я]{2,20}( )[а-яА-Я]{6,20}'),
                     phone
                 ),
+                MessageHandler(
+                    Filters.regex(r'[а-яА-Я]{2,20}( )[а-яА-Я]{2,20}'),
+                    phone
+                ),
                 MessageHandler(Filters.text, incorrect_input),
             ],
             GET_PHONE: [
