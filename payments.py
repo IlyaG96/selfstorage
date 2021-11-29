@@ -111,8 +111,6 @@ def check_promocode(code, context_data):
                 coefficient = 0.85
             else:
                 message = 'Промокод не может быть применён к данному заказу\n\n'
-    elif code == 'Пропустить':
-        pass
     else:
         message = 'Бот не смог распознать ваш промокод\n\n'                
 

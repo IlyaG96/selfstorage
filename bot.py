@@ -268,23 +268,29 @@ def get_promocode(update, context):
             resize_keyboard=True,
         ),
     )
-    return GET_PROMOCODE  
+    return GET_PROMOCODE
+
+
+def promocode_check_message(update, context):
+    coefficient, message = check_promocode(update.message.text, context.user_data)
+
+    if update.message.text == 'Пропустить':
+        return get_agreement_accept(update, context)
+    elif message:
+        update.message.reply_text(f'{message}Попробуйте другой промокод или нажмите на кнопку Пропустить')
+        return GET_PROMOCODE
+    else:
+        total_price = int(count_price(update, context) * coefficient)
+        context.user_data['cost'] = total_price
+        update.message.reply_text(
+            f'Промокод успешно применен. Стоимость бронирования теперь: {total_price} руб.'
+        )
+        return get_agreement_accept(update, context)
 
 
 def get_agreement_accept(update, context):
-    coefficient, message = check_promocode(update.message.text, context.user_data)
     user = get_user(update.message.from_user.id)
     if user:
-        total_price = int(count_price(update, context) * coefficient)
-        context.user_data['cost'] = total_price
-    
-        update.message.reply_text(
-            f'{message}Стоимость бронирования: {total_price} руб.',
-            reply_markup=ReplyKeyboardMarkup(
-                [['Оплатить']],
-                resize_keyboard=True,
-            ),
-        )
         return TAKE_PAYMENT
     else:
         keyboard = [
@@ -726,7 +732,7 @@ if __name__ == '__main__':
                 MessageHandler(Filters.text, incorrect_input),
             ],
             GET_PROMOCODE: [
-                MessageHandler(Filters.text, get_agreement_accept),
+                MessageHandler(Filters.text, promocode_check_message),
             ],
         },
         fallbacks=[CommandHandler('start', start), MessageHandler(Filters.regex('^Начать$'), start)],
