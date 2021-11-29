@@ -589,7 +589,6 @@ if __name__ == '__main__':
     env = Env()
     env.read_env()
     BOT_TOKEN = env('BOT_TOKEN')
-    PROVIDER_TOKEN = env('SB_TOKEN')
     updater = Updater(token=BOT_TOKEN)
     dispatcher = updater.dispatcher
     if not Path(selfstorage).is_file():

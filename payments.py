@@ -2,7 +2,6 @@ from telegram import LabeledPrice, ReplyKeyboardRemove
 from environs import Env
 from db_helpers import get_other_prices, get_seasoned_prices, get_entity_price
 from words_declension import num_with_ruble
-from bot import PROVIDER_TOKEN
 
 TAKE_PAYMENT, PRECHECKOUT, SUCCESS_PAYMENT = range(20, 23)
 
@@ -13,11 +12,14 @@ def take_payment(update, context):
 
     update.message.reply_text('Формирую счёт...', reply_markup=ReplyKeyboardRemove())
 
+    env = Env()
+    env.read_env()
+    provider_token = env('SB_TOKEN')
     chat_id = update.message.chat_id
     title = "Ваш заказ"
     description = f"Оплата вашего заказа стоимостью {num_with_ruble(price)}"
     payload = "Custom-Payload"
-    provider_token = PROVIDER_TOKEN
+
     currency = "RUB"
     prices = [LabeledPrice("Стоимость", price * 100)]
 
