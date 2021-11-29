@@ -275,6 +275,9 @@ def promocode_check_message(update, context):
     coefficient, message = check_promocode(update.message.text, context.user_data)
 
     if update.message.text == 'Пропустить':
+        total_price = count_price(update, context)
+        context.user_data['cost'] = total_price
+
         return get_agreement_accept(update, context)
     elif message:
         update.message.reply_text(f'{message}Попробуйте другой промокод или нажмите на кнопку Пропустить')
@@ -291,8 +294,7 @@ def promocode_check_message(update, context):
 def get_agreement_accept(update, context):
     user = get_user(update.message.from_user.id)
     if user:
-        total_price = count_price(update, context)
-        context.user_data['cost'] = total_price
+        total_price = context.user_data['cost']
 
         update.message.reply_text(
             f'Стоимость бронирования: {total_price} руб.',
