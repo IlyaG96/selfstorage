@@ -39,7 +39,7 @@ def entity_count(update, context):
             KeyboardButton('Назад ⬅'),
         ]
 
-    keyboard = build_menu(buttons, n_cols=2, footer_buttons=[KeyboardButton('Назад ⬅')])
+    keyboard = build_menu(buttons, n_cols=2)
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
 
     update.message.reply_text(
