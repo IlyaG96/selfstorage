@@ -383,6 +383,10 @@ def phone(update, context):
             context.user_data['last_name'] = last_name
             context.user_data['first_name'] = first_name
             context.user_data['patronymic'] = patronymic
+        elif len(message_parts) == 2:
+            last_name, first_name = message_parts
+            context.user_data['last_name'] = last_name
+            context.user_data['first_name'] = first_name
         else:
             context.user_data['patronymic'] = update.message.text
     
