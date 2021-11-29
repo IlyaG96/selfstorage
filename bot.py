@@ -79,7 +79,7 @@ def get_other_things_area(update, context):
 
     start_price, add_price = get_other_prices()
 
-    things_areas_buttons = [KeyboardButton(f'{area + 1} м² за {start_price + add_price * area} руб./мес.')
+    things_areas_buttons = [KeyboardButton(f'{area} м² за {start_price + add_price * area} руб./мес.')
                             for area in range(1, 11)]
     things_areas_buttons.append(KeyboardButton('Назад ⬅'))
 
