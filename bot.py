@@ -563,7 +563,7 @@ def incorrect_input(update, context):
 def incorrect_fio(update, context):
     update.message.reply_text(
         'Я вас не понимаю \U0001F61F\n\n'
-        'Пожалуйста, введите имя в формате Фамилия Имя'
+        'Пожалуйста, введите имя в формате Фамилия Имя '
         'или Фамилия Имя Отчество'
     )
 
