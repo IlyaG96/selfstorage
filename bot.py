@@ -291,6 +291,16 @@ def promocode_check_message(update, context):
 def get_agreement_accept(update, context):
     user = get_user(update.message.from_user.id)
     if user:
+        total_price = count_price(update, context)
+        context.user_data['cost'] = total_price
+
+        update.message.reply_text(
+            f'Стоимость бронирования: {total_price} руб.',
+            reply_markup=ReplyKeyboardMarkup(
+                [['Оплатить']],
+                resize_keyboard=True,
+            )
+        )
         return TAKE_PAYMENT
     else:
         keyboard = [
@@ -444,9 +454,8 @@ def correct_birthdate(update, context):
     
         if not get_user(update.message.from_user.id):
             add_user(context.user_data)
-    
-        total_price = count_price(update, context)
-        context.user_data['cost'] = total_price
+
+        total_price = context.user_data['cost']
     
         update.message.reply_text(
             f'Стоимость бронирования: {total_price} руб.',
