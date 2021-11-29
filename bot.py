@@ -666,9 +666,9 @@ if __name__ == '__main__':
             GET_FULL_NAME: [
                 MessageHandler(
                     Filters.regex(r'[а-яА-Я]{2,20}( )[а-яА-Я]{2,20}( )[а-яА-Я]{6,20}'),
-                    phone,
-                    MessageHandler(Filters.text, incorrect_input),
+                    phone
                 ),
+                MessageHandler(Filters.text, incorrect_input),
             ],
             GET_PHONE: [
                 MessageHandler(Filters.contact, correct_phone),
