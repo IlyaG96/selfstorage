@@ -14,8 +14,8 @@ from db_helpers import add_user, get_user, get_code, create_db, selfstorage, add
     get_reservations, get_other_prices, get_seasoned_prices, get_seasoned_things, add_warehouses, \
     get_warehouses_with_short_name, get_warehouse_id_by_short_name
 from payments import take_payment, count_price, precheckout, check_promocode, PRECHECKOUT, SUCCESS_PAYMENT, TAKE_PAYMENT
-from entity_services import entity_greetings, entity_order, entity_count, entity_order_confirmation,\
-    GET_ENTITY_ORDER, GET_ENTITY_COUNT, ENTITY_ORDER_CONFIRMATION
+from entity_services import entity_greetings, entity_order, entity_count, entity_order_confirmation, \
+    entity_order_confirmation_back, entity_order_back, GET_ENTITY_ORDER, GET_ENTITY_COUNT, ENTITY_ORDER_CONFIRMATION
 GET_ACCEPT, GET_THINGS_TYPE, GET_OTHER_THINGS_AREA, GET_THINGS_CONFIRMATION, GET_PERSONAL_DATA = range(5)
 GET_SEASONED_THINGS_TYPE, GET_SEASONED_THINGS_COUNT, GET_SEASONED_THINGS_TIME_TYPE = range(5, 8)
 GET_NAME_INPUT_CHOICE, GET_PATRONYMIC, GET_FULL_NAME = range(8, 11)
@@ -539,8 +539,10 @@ def get_things_confirmation_back(update, context):
 def get_personal_data_back(update, context):
     if context.user_data['supertype'] == 'Сезонные вещи':
         return get_seasoned_things_time(update, context)
-    else:
+    elif context.user_data['supertype'] == 'Другое':
         return get_other_things_time(update, context)
+    else:
+        return entity_order(update, context)
 
 
 def get_things_type_back(update, context):
@@ -627,14 +629,18 @@ if __name__ == '__main__':
             # ветка услуг для юр. лиц
             GET_ENTITY_COUNT: [
                 MessageHandler(Filters.regex('^Назад ⬅$'), get_things_type),
-                MessageHandler(Filters.text, entity_count)
-                          ],
+                MessageHandler(Filters.text('^Аренда стеллажей для хранения документов (899 руб./мес.)$'), entity_count),
+                MessageHandler(Filters.text, incorrect_input),
+            ],
             GET_ENTITY_ORDER: [
-                MessageHandler(Filters.regex('^Назад ⬅$'), entity_count),
-                MessageHandler(Filters.text, entity_order)
-                ],
+                MessageHandler(Filters.regex('^Назад ⬅$'), entity_order_back),
+                MessageHandler(Filters.regex(r'^\d{1,2}$'), entity_order),
+                MessageHandler(Filters.text, incorrect_input),
+            ],
             ENTITY_ORDER_CONFIRMATION: [
-                MessageHandler(Filters.text, entity_order_confirmation)
+                MessageHandler(Filters.text('Назад ⬅'), entity_order_confirmation_back),
+                MessageHandler(Filters.regex(r'^\d{1,2} мес\.\n\(\d{2,6} руб\.\)$'), entity_order_confirmation),
+                MessageHandler(Filters.text, incorrect_input),
             ],
             GET_THINGS_CONFIRMATION: [
                 MessageHandler(Filters.regex(r'^\d{1,2} мес.$'), get_things_confirmation),

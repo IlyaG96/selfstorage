@@ -10,6 +10,9 @@ GET_PERSONAL_DATA = 4
 
 def entity_greetings(update, context):
 
+    if update.message.text != 'Назад ⬅':
+        context.user_data['supertype'] = update.message.text
+
     keyboard = [
         [
             KeyboardButton('Аренда стеллажей для хранения документов (899 руб./мес.)'),
@@ -33,11 +36,11 @@ def entity_greetings(update, context):
 def entity_count(update, context):
 
     if update.message.text != 'Назад ⬅':
-        context.user_data['supertype'] = update.message.text
+        context.user_data['entity_service_type'] = update.message.text
 
     keyboard = [
         [
-            KeyboardButton('Назад'),
+            KeyboardButton('Назад ⬅'),
         ]
     ]
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
@@ -92,9 +95,21 @@ def entity_order_confirmation(update, context):
     update.message.reply_text(
         f'Ваш заказ: \n'
         f'Тип: {user_data["supertype"]}\n'
+        f'Количество стеллажей: {user_data["entity_rack_count"]}\n'
         f'Время хранения: {num_with_month(time)}\n'
         f'Итоговая цена: {num_with_ruble(count_price(update, context))}',
         reply_markup=reply_markup
     )
 
     return GET_PERSONAL_DATA
+
+
+def entity_order_confirmation_back(update, context):
+    if context.user_data['supertype'] == 'Услуги для юридических лиц':
+        return entity_count(update, context)
+
+
+def entity_order_back(update, context):
+    if context.user_data['supertype'] == 'Услуги для юридических лиц':
+        return entity_greetings(update, context)
+

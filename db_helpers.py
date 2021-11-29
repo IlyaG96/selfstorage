@@ -148,7 +148,7 @@ def add_reservation(context_data):
     else:
         thing_type = 'Стеллаж для хранения документов'
         count = context_data['entity_rack_count']
-        period_in_weeks = context_data['entity_rack_count'] * 4
+        period_in_weeks = context_data['entity_time'] * 4
         reservation_end = reservation_start + timedelta(weeks=period_in_weeks)
 
     end = reservation_end.strftime("%d.%m.%Y")    
