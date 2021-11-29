@@ -13,14 +13,11 @@ def entity_greetings(update, context):
     if update.message.text != 'Назад ⬅':
         context.user_data['supertype'] = update.message.text
 
-    keyboard = [
-        [
+    buttons = [
             KeyboardButton('Аренда стеллажей для хранения документов (899 руб./мес.)'),
-        ],
-        [
-            KeyboardButton('Назад ⬅')
         ]
-    ]
+
+    keyboard = build_menu(buttons, n_cols=2, footer_buttons=[KeyboardButton('Назад ⬅')])
 
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
 
@@ -38,11 +35,11 @@ def entity_count(update, context):
     if update.message.text != 'Назад ⬅':
         context.user_data['entity_service_type'] = update.message.text
 
-    keyboard = [
-        [
+    buttons = [
             KeyboardButton('Назад ⬅'),
         ]
-    ]
+
+    keyboard = build_menu(buttons, n_cols=2, footer_buttons=[KeyboardButton('Назад ⬅')])
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
 
     update.message.reply_text(

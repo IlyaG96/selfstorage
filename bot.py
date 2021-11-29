@@ -56,16 +56,12 @@ def get_things_type(update, context):
         else:
             return GET_ADDRESS
 
-    keyboard = [
-        [
+    buttons = [
             KeyboardButton('Сезонные вещи'),
             KeyboardButton('Другое'),
             KeyboardButton('Услуги для юридических лиц')
-        ],
-        [
-            KeyboardButton('Назад ⬅')
         ]
-    ]
+    keyboard = build_menu(buttons, n_cols=2, footer_buttons=[KeyboardButton('Назад ⬅')])
 
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
 
@@ -167,15 +163,12 @@ def get_seasoned_things_time_type(update, context):
     if update.message.text != 'Назад ⬅':
         user_data['seasoned_count'] = int(update.message.text)
 
-    keyboard = [
-        [
+    buttons = [
             KeyboardButton(f'Недели'),
             KeyboardButton(f'Месяцы')
-        ],
-        [
-            KeyboardButton('Назад ⬅')
         ]
-    ]
+
+    keyboard = build_menu(buttons, n_cols=2, footer_buttons=[KeyboardButton('Назад ⬅')])
 
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
 
