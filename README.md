@@ -29,7 +29,7 @@ $ pip install -r requirements.txt
 * BOT_TOKEN - токен бота Telegram
 * SB_TOKEN - токен платежной системы, подключенной к боту
 
-Находясь в директории weather исполните
+Находясь в директории selfstorage исполните
 ```bash
 $ bin/python bot.py
 ```
